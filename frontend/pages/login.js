@@ -7,17 +7,40 @@ export default function Login() {
 
   const handleLogin = async (e) => {
     e.preventDefault();
-    const res = await fetch('http://localhost:5000/api/auth/login', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password })
-    });
-    const data = await res.json();
-    if (data.token) {
-      localStorage.setItem('token', data.token);
-      window.location.href = '/dashboard';
-    } else {
-      alert('Login failed');
+    try {
+      const response = await fetch('http://localhost:5000/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: email,
+          password: password,
+        }),
+      });
+
+      const data = await response.json();
+      console.log('Login response:', data); // Debug log
+
+      if (response.ok && data.userId) {
+        // Store both token and userId
+        localStorage.setItem('token', data.token);
+        localStorage.setItem('userId', data.userId);
+        console.log('Stored userId:', data.userId); // Debug log
+        
+        // Verify storage
+        const storedId = localStorage.getItem('userId');
+        console.log('Verified stored userId:', storedId); // Debug log
+        
+        window.location.href = '/directmessages';
+      } else {
+        console.error('Login failed:', data.message);
+        // Show error to user
+        alert(data.message || 'Login failed');
+      }
+    } catch (error) {
+      console.error('Login error:', error);
+      alert('An error occurred during login');
     }
   };
 

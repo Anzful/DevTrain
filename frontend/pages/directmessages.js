@@ -32,33 +32,66 @@ export default function DirectMessages() {
     }
   }, [usersData]);
 
+  useEffect(() => {
+    if (selectedUser) {
+      const currentUserId = localStorage.getItem('userId');
+      fetch(`http://localhost:5000/api/messages/${currentUserId}/${selectedUser._id}`, {
+        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+      })
+        .then((res) => res.json())
+        .then((data) => {
+          setMessages(data);
+        })
+        .catch((error) => console.error('Error loading messages:', error));
+    }
+  }, [selectedUser]);
+
   // Initialize Socket.IO only once
   useEffect(() => {
     const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5000';
-    socketRef.current = io(backendUrl);
-    console.log('Socket connected to:', backendUrl);
-
     const currentUserId = localStorage.getItem('userId');
-    if (currentUserId) {
-      socketRef.current.emit('register', currentUserId);
-      console.log('Registered user:', currentUserId);
-    } else {
-      console.warn('No userId found in localStorage');
+    
+    console.log('Current userId from localStorage:', currentUserId); // Debug log
+    
+    // Redirect to login if no userId is found
+    if (!currentUserId) {
+      console.log('No userId found, redirecting to login...');
+      window.location.href = '/login';
+      return;
     }
+
+    socketRef.current = io(backendUrl);
+    console.log('Attempting socket connection to:', backendUrl);
+
+    // Handle socket connection events
+    socketRef.current.on('connect', () => {
+      console.log('Socket connected with ID:', socketRef.current.id);
+      console.log('About to register with userId:', currentUserId); // Debug log
+      socketRef.current.emit('register', currentUserId);
+      console.log('Sent registration for user:', currentUserId);
+    });
+
+    socketRef.current.on('connect_error', (error) => {
+      console.error('Socket connection error:', error);
+    });
 
     socketRef.current.on('direct message', (data) => {
       console.log("New direct message received:", data);
-      // Append message regardless of selected user; UI logic can filter later if needed
-      setMessages((prev) => [...prev, data]);
+      setMessages((prev) => {
+        if (data.from !== localStorage.getItem('userId')) {
+          return [...prev, data];
+        }
+        return prev;
+      });
     });
 
     return () => {
       if (socketRef.current) {
+        console.log('Disconnecting socket');
         socketRef.current.disconnect();
-        console.log('Socket disconnected');
       }
     };
-  }, []); // run once
+  }, []); // Empty dependency array for initial setup
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -79,11 +112,35 @@ export default function DirectMessages() {
   };
 
   const sendMessage = () => {
+    const currentUserId = localStorage.getItem('userId');
+    console.log('Sending message with userId:', currentUserId);
+
+    if (!currentUserId) {
+      console.error('No userId found, cannot send message');
+      window.location.href = '/login';
+      return;
+    }
+
     if (input.trim() !== '' && selectedUser) {
-      const currentUserId = localStorage.getItem('userId');
-      const messageData = { from: currentUserId, to: selectedUser._id, message: input };
-      socketRef.current.emit('direct message', messageData);
+      const messageData = {
+        from: currentUserId,
+        to: selectedUser._id,
+        message: input,
+        timestamp: new Date().toISOString()
+      };
+      
       setMessages((prev) => [...prev, messageData]);
+      
+      fetch('http://localhost:5000/api/messages', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${localStorage.getItem('token')}`,
+        },
+        body: JSON.stringify(messageData),
+      }).catch(error => console.error('Error saving message:', error));
+      
+      socketRef.current.emit('direct message', messageData);
       setInput('');
     }
   };
