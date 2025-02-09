@@ -32,6 +32,7 @@ export default function DirectMessages() {
     }
   }, [usersData]);
 
+<<<<<<< HEAD
   useEffect(() => {
     if (selectedUser) {
       const currentUserId = localStorage.getItem('userId');
@@ -83,15 +84,43 @@ export default function DirectMessages() {
         }
         return prev;
       });
+=======
+  // Initialize Socket.IO only once
+  useEffect(() => {
+    const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5000';
+    socketRef.current = io(backendUrl);
+    console.log('Socket connected to:', backendUrl);
+
+    const currentUserId = localStorage.getItem('userId');
+    if (currentUserId) {
+      socketRef.current.emit('register', currentUserId);
+      console.log('Registered user:', currentUserId);
+    } else {
+      console.warn('No userId found in localStorage');
+    }
+
+    socketRef.current.on('direct message', (data) => {
+      console.log("New direct message received:", data);
+      // Append message regardless of selected user; UI logic can filter later if needed
+      setMessages((prev) => [...prev, data]);
+>>>>>>> 2aaa4a0f32c6f5f6905215075cd8474278ab18ec
     });
 
     return () => {
       if (socketRef.current) {
+<<<<<<< HEAD
         console.log('Disconnecting socket');
         socketRef.current.disconnect();
       }
     };
   }, []); // Empty dependency array for initial setup
+=======
+        socketRef.current.disconnect();
+        console.log('Socket disconnected');
+      }
+    };
+  }, []); // run once
+>>>>>>> 2aaa4a0f32c6f5f6905215075cd8474278ab18ec
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -112,6 +141,7 @@ export default function DirectMessages() {
   };
 
   const sendMessage = () => {
+<<<<<<< HEAD
     const currentUserId = localStorage.getItem('userId');
     console.log('Sending message with userId:', currentUserId);
 
@@ -141,6 +171,13 @@ export default function DirectMessages() {
       }).catch(error => console.error('Error saving message:', error));
       
       socketRef.current.emit('direct message', messageData);
+=======
+    if (input.trim() !== '' && selectedUser) {
+      const currentUserId = localStorage.getItem('userId');
+      const messageData = { from: currentUserId, to: selectedUser._id, message: input };
+      socketRef.current.emit('direct message', messageData);
+      setMessages((prev) => [...prev, messageData]);
+>>>>>>> 2aaa4a0f32c6f5f6905215075cd8474278ab18ec
       setInput('');
     }
   };
