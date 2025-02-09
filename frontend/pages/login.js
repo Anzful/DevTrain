@@ -7,7 +7,6 @@ export default function Login() {
 
   const handleLogin = async (e) => {
     e.preventDefault();
-<<<<<<< HEAD
     try {
       const response = await fetch('http://localhost:5000/api/auth/login', {
         method: 'POST',
@@ -42,19 +41,6 @@ export default function Login() {
     } catch (error) {
       console.error('Login error:', error);
       alert('An error occurred during login');
-=======
-    const res = await fetch('http://localhost:5000/api/auth/login', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password })
-    });
-    const data = await res.json();
-    if (data.token) {
-      localStorage.setItem('token', data.token);
-      window.location.href = '/dashboard';
-    } else {
-      alert('Login failed');
->>>>>>> 2aaa4a0f32c6f5f6905215075cd8474278ab18ec
     }
   };
 
