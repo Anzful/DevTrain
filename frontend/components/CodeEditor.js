@@ -1,15 +1,43 @@
 // frontend/components/CodeEditor.js
-import Editor from '@monaco-editor/react';
+import { useEffect } from 'react';
+import AceEditor from 'react-ace';
 
-export default function CodeEditor({ value = '', onChange, language = 'javascript' }) {
+import 'ace-builds/src-noconflict/mode-python';
+import 'ace-builds/src-noconflict/mode-javascript';
+import 'ace-builds/src-noconflict/mode-java';
+import 'ace-builds/src-noconflict/theme-monokai';
+
+export default function CodeEditor({ value, onChange, language, className }) {
+  const getMode = () => {
+    switch (language) {
+      case 'javascript':
+        return 'javascript';
+      case 'java':
+        return 'java';
+      case 'python':
+      default:
+        return 'python';
+    }
+  };
+
   return (
-    <Editor
-      height="400px"
-      defaultLanguage={language}
+    <AceEditor
+      mode={getMode()}
+      theme="monokai"
+      onChange={onChange}
       value={value}
-      theme="vs-dark"
-      onChange={(newValue) => onChange && onChange(newValue)}
-      options={{ automaticLayout: true }}
+      name="code-editor"
+      editorProps={{ $blockScrolling: true }}
+      width="100%"
+      height="400px"
+      className={className}
+      setOptions={{
+        enableBasicAutocompletion: true,
+        enableLiveAutocompletion: true,
+        enableSnippets: true,
+        showLineNumbers: true,
+        tabSize: 2,
+      }}
     />
   );
 }
