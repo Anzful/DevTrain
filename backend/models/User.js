@@ -11,7 +11,14 @@ const userSchema = new mongoose.Schema({
     required: true,
     unique: true
   },
-  role: { type: String, enum: ['admin', 'instructor', 'student'], default: 'student' },
+  password: {
+    type: String,
+    required: true
+  },
+  isAdmin: {
+    type: Boolean,
+    default: false
+  },
   experiencePoints: {
     type: Number,
     default: 0
@@ -20,6 +27,15 @@ const userSchema = new mongoose.Schema({
     type: Number,
     default: 0
   },
+  totalSubmissions: {
+    type: Number,
+    default: 0
+  },
+  lastActive: {
+    type: Date,
+    default: Date.now
+  },
+  role: { type: String, enum: ['admin', 'instructor', 'student'], default: 'student' },
   badges: [String]
 }, {
   timestamps: true // Adds createdAt and updatedAt fields

@@ -8,6 +8,7 @@ const session = require('express-session');
 const cors = require('cors');
 const http = require('http');
 const socketIo = require('socket.io');
+const userRoutes = require('./routes/users');
 
 const app = express();
 const server = http.createServer(app);
@@ -36,7 +37,7 @@ app.use('/api/challenges', require('./routes/challenges'));
 app.use('/api/submissions', require('./routes/submissions'));
 app.use('/api/forum', require('./routes/forum'));
 app.use('/api/competitions', require('./routes/competitions'));
-app.use('/api/users', require('./routes/users'));
+app.use('/api/users', userRoutes);
 app.use('/api/leaderboards', require('./routes/leaderboards'));
 app.use('/api/messages', require('./routes/messages'));
 

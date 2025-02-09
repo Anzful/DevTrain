@@ -4,8 +4,8 @@ const router = express.Router();
 const User = require('../models/User');
 const auth = require('../middleware/auth');
 
-// GET /api/leaderboards - Retrieve top users by experience points
-router.get('/', auth, async (req, res) => {
+// Get leaderboards data
+router.get('/', auth, async function(req, res) {
   try {
     const { timeframe } = req.query;
     let query = {};
@@ -29,12 +29,7 @@ router.get('/', auth, async (req, res) => {
 
     console.log('Leaderboard data:', users);
 
-    res.json(users.map(user => ({
-      _id: user._id,
-      name: user.name,
-      experiencePoints: user.experiencePoints || 0,
-      successfulSubmissions: user.successfulSubmissions || 0
-    })));
+    res.json(users);
 
   } catch (error) {
     console.error('Leaderboard error:', error);
