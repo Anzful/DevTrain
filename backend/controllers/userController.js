@@ -46,6 +46,7 @@ exports.getUserStats = async (req, res) => {
       level: currentLevel,
       experiencePoints: user.experiencePoints,
       currentBadge: user.currentBadge,
+      isAdmin: user.isAdmin || false,
       levelProgress: {
         currentLevel,
         currentLevelXP,
@@ -68,6 +69,7 @@ exports.getUserStats = async (req, res) => {
       lastActive: user.lastActive || user.updatedAt
     };
 
+    console.log('User stats:', { userId: stats.userId, isAdmin: stats.isAdmin }); // Debug log
     res.json(stats);
   } catch (error) {
     console.error('Error fetching user stats:', error);

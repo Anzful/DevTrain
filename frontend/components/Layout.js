@@ -29,6 +29,7 @@ export default function Layout({ children }) {
         }
 
         const userData = await response.json();
+        console.log('User data:', userData); // Debug log
         setUser(userData);
       } catch (error) {
         console.error('Error fetching user data:', error);
@@ -54,7 +55,7 @@ export default function Layout({ children }) {
           <div className="flex justify-between items-center h-16">
             <div className="flex space-x-7">
               <Link href="/dashboard" className="flex items-center py-4 px-2">
-                <span className="font-semibold text-gray-500 text-lg">DevTrain</span>
+                <span className="font-semibold text-gray-500 text-lg">CodeCraft</span>
               </Link>
             </div>
 
@@ -69,6 +70,11 @@ export default function Layout({ children }) {
               }`}>
                 Challenges
               </Link>
+              <Link href="/forum" className={`py-2 px-3 rounded ${
+                router.pathname === '/forum' ? 'bg-indigo-600 text-white' : 'text-gray-500 hover:text-indigo-600'
+              }`}>
+                Forum
+              </Link>
               <Link href="/leaderboards" className={`py-2 px-3 rounded ${
                 router.pathname === '/leaderboards' ? 'bg-indigo-600 text-white' : 'text-gray-500 hover:text-indigo-600'
               }`}>
@@ -79,6 +85,13 @@ export default function Layout({ children }) {
               }`}>
                 Messages
               </Link>
+              {user?.isAdmin === true && (
+                <Link href="/admin" className={`py-2 px-3 rounded ${
+                  router.pathname === '/admin' ? 'bg-indigo-600 text-white' : 'text-gray-500 hover:text-indigo-600'
+                }`}>
+                  Admin
+                </Link>
+              )}
             </div>
 
             {!loading && (

@@ -1,11 +1,27 @@
 // backend/routes/challenges.js
 const express = require('express');
 const router = express.Router();
-const challengeController = require('../controllers/challengeController');
-const { verifyToken } = require('../middleware/authMiddleware');
+const auth = require('../middleware/auth');
+const {
+  getChallenges,
+  getChallenge,
+  createChallenge,
+  updateChallenge,
+  deleteChallenge
+} = require('../controllers/challengeController');
 
-router.get('/', verifyToken, challengeController.getAllChallenges);
-router.get('/:id', verifyToken, challengeController.getChallengeById);
-router.post('/', verifyToken, challengeController.createChallenge);
+// Admin middleware
+const adminAuth = (req, res, next) => {
+  if (!req.user.isAdmin) {
+    return res.status(403).json({ message: 'Not authorized' });
+  }
+  next();
+};
+
+router.get('/', getChallenges);
+router.get('/:id', getChallenge);
+router.post('/', auth, adminAuth, createChallenge);
+router.put('/:id', auth, adminAuth, updateChallenge);
+router.delete('/:id', auth, adminAuth, deleteChallenge);
 
 module.exports = router;

@@ -1,177 +1,323 @@
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/router';
 import Layout from '../components/Layout';
 import { toast } from 'react-hot-toast';
+import { useRouter } from 'next/router';
 
-export default function AdminPage() {
+export default function AdminDashboard() {
   const router = useRouter();
+  const [users, setUsers] = useState([]);
+  const [challenges, setChallenges] = useState([]);
+  const [forumPosts, setForumPosts] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
-  const [newChallenge, setNewChallenge] = useState({
-    title: '',
-    description: '',
-    difficulty: 'easy',
-    template: '',
-    testCases: [{ input: '', output: '' }]
-  });
+  const [activeTab, setActiveTab] = useState('users');
 
   useEffect(() => {
     const checkAdmin = async () => {
       try {
-        const response = await fetch('http://localhost:5000/api/users/me', {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem('token')}`,
-          },
-        });
-        const data = await response.json();
-        if (!data.isAdmin) {
-          router.push('/');
+        const token = localStorage.getItem('token');
+        if (!token) {
+          router.push('/login');
           return;
         }
+
+        const response = await fetch('http://localhost:5000/api/users/stats', {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+
+        if (!response.ok) throw new Error('Failed to fetch user data');
+        
+        const userData = await response.json();
+        if (!userData.isAdmin) {
+          router.push('/dashboard');
+          toast.error('Access denied: Admin only');
+          return;
+        }
+
         setIsAdmin(true);
+        fetchData();
       } catch (error) {
-        router.push('/');
+        console.error('Error checking admin status:', error);
+        router.push('/dashboard');
       }
     };
+
     checkAdmin();
-  }, []);
+  }, [router]);
 
-  const handleAddTestCase = () => {
-    setNewChallenge(prev => ({
-      ...prev,
-      testCases: [...prev.testCases, { input: '', output: '' }]
-    }));
-  };
-
-  const handleTestCaseChange = (index, field, value) => {
-    const updatedTestCases = [...newChallenge.testCases];
-    updatedTestCases[index][field] = value;
-    setNewChallenge(prev => ({
-      ...prev,
-      testCases: updatedTestCases
-    }));
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const fetchData = async () => {
     try {
-      const response = await fetch('http://localhost:5000/api/challenges', {
-        method: 'POST',
+      const token = localStorage.getItem('token');
+      
+      // Fetch users
+      const usersResponse = await fetch('http://localhost:5000/api/users', {
         headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${localStorage.getItem('token')}`,
-        },
-        body: JSON.stringify(newChallenge),
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      
+      // Fetch challenges
+      const challengesResponse = await fetch('http://localhost:5000/api/challenges', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
       });
 
-      if (response.ok) {
-        toast.success('Challenge created successfully!');
-        setNewChallenge({
-          title: '',
-          description: '',
-          difficulty: 'easy',
-          template: '',
-          testCases: [{ input: '', output: '' }]
-        });
-      } else {
-        toast.error('Failed to create challenge');
-      }
+      const [usersData, challengesData] = await Promise.all([
+        usersResponse.json(),
+        challengesResponse.json()
+      ]);
+
+      setUsers(usersData);
+      setChallenges(challengesData);
     } catch (error) {
-      toast.error('Error creating challenge');
+      console.error('Error fetching data:', error);
+      toast.error('Failed to load admin data');
+    } finally {
+      setLoading(false);
     }
   };
 
-  if (!isAdmin) return null;
+  const handleDeleteForumPost = async (postId) => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`http://localhost:5000/api/forum/posts/${postId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (!response.ok) throw new Error('Failed to delete post');
+      
+      setForumPosts(posts => posts.filter(post => post._id !== postId));
+      toast.success('Post deleted successfully');
+    } catch (error) {
+      console.error('Error deleting post:', error);
+      toast.error('Failed to delete post');
+    }
+  };
+
+  const handleAddChallenge = () => {
+    router.push('/challenges/new');
+  };
+
+  const handleEditChallenge = (challengeId) => {
+    router.push(`/challenges/edit/${challengeId}`);
+  };
+
+  const handleDeleteChallenge = async (challengeId) => {
+    if (!confirm('Are you sure you want to delete this challenge?')) {
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`http://localhost:5000/api/challenges/${challengeId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Failed to delete challenge');
+      }
+
+      setChallenges(challenges => challenges.filter(c => c._id !== challengeId));
+      toast.success('Challenge deleted successfully');
+    } catch (error) {
+      console.error('Error deleting challenge:', error);
+      toast.error(error.message || 'Failed to delete challenge');
+    }
+  };
+
+  if (loading || !isAdmin) {
+    return (
+      <Layout>
+        <div className="flex justify-center items-center min-h-screen">
+          <div className="text-xl">Loading...</div>
+        </div>
+      </Layout>
+    );
+  }
 
   return (
     <Layout>
-      <div className="max-w-4xl mx-auto p-4">
-        <h1 className="text-2xl font-bold mb-4">Admin Dashboard</h1>
-        
-        <div className="bg-white shadow rounded-lg p-6">
-          <h2 className="text-xl font-semibold mb-4">Create New Challenge</h2>
-          <form onSubmit={handleSubmit}>
-            <div className="space-y-4">
-              <div>
-                <label className="block mb-1">Title</label>
-                <input
-                  type="text"
-                  value={newChallenge.title}
-                  onChange={(e) => setNewChallenge(prev => ({...prev, title: e.target.value}))}
-                  className="w-full border rounded p-2"
-                  required
-                />
-              </div>
+      <div className="max-w-6xl mx-auto p-4">
+        <h1 className="text-3xl font-bold mb-8">Admin Dashboard</h1>
 
-              <div>
-                <label className="block mb-1">Description</label>
-                <textarea
-                  value={newChallenge.description}
-                  onChange={(e) => setNewChallenge(prev => ({...prev, description: e.target.value}))}
-                  className="w-full border rounded p-2 h-32"
-                  required
-                />
-              </div>
+        <div className="mb-6">
+          <div className="flex space-x-4 border-b">
+            <button
+              onClick={() => setActiveTab('users')}
+              className={`py-2 px-4 ${activeTab === 'users' ? 'border-b-2 border-indigo-600' : ''}`}
+            >
+              Users
+            </button>
+            <button
+              onClick={() => setActiveTab('challenges')}
+              className={`py-2 px-4 ${activeTab === 'challenges' ? 'border-b-2 border-indigo-600' : ''}`}
+            >
+              Challenges
+            </button>
+            <button
+              onClick={() => setActiveTab('forum')}
+              className={`py-2 px-4 ${activeTab === 'forum' ? 'border-b-2 border-indigo-600' : ''}`}
+            >
+              Forum Posts
+            </button>
+          </div>
+        </div>
 
-              <div>
-                <label className="block mb-1">Difficulty</label>
-                <select
-                  value={newChallenge.difficulty}
-                  onChange={(e) => setNewChallenge(prev => ({...prev, difficulty: e.target.value}))}
-                  className="border rounded p-2"
-                >
-                  <option value="easy">Easy</option>
-                  <option value="medium">Medium</option>
-                  <option value="hard">Hard</option>
-                </select>
-              </div>
+        {activeTab === 'users' && (
+          <section>
+            <h2 className="text-2xl font-semibold mb-4">Users ({users.length})</h2>
+            <div className="bg-white shadow rounded-lg overflow-hidden">
+              <table className="min-w-full">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Level</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {users.map(user => (
+                    <tr key={user._id}>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="flex items-center">
+                          <div className="text-2xl mr-2">{user.currentBadge?.image || '🔰'}</div>
+                          <div className="text-sm font-medium text-gray-900">{user.name}</div>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{user.email}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{user.level || 1}</td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                          user.isAdmin ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
+                        }`}>
+                          {user.isAdmin ? 'Admin' : 'User'}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </section>
+        )}
 
-              <div>
-                <label className="block mb-1">Code Template</label>
-                <textarea
-                  value={newChallenge.template}
-                  onChange={(e) => setNewChallenge(prev => ({...prev, template: e.target.value}))}
-                  className="w-full border rounded p-2 h-32 font-mono"
-                />
-              </div>
-
-              <div>
-                <label className="block mb-1">Test Cases</label>
-                {newChallenge.testCases.map((testCase, index) => (
-                  <div key={index} className="flex space-x-2 mb-2">
-                    <input
-                      type="text"
-                      placeholder="Input"
-                      value={testCase.input}
-                      onChange={(e) => handleTestCaseChange(index, 'input', e.target.value)}
-                      className="border rounded p-2 flex-1"
-                    />
-                    <input
-                      type="text"
-                      placeholder="Expected Output"
-                      value={testCase.output}
-                      onChange={(e) => handleTestCaseChange(index, 'output', e.target.value)}
-                      className="border rounded p-2 flex-1"
-                    />
-                  </div>
-                ))}
-                <button
-                  type="button"
-                  onClick={handleAddTestCase}
-                  className="text-blue-600 hover:text-blue-700"
-                >
-                  + Add Test Case
-                </button>
-              </div>
-
+        {activeTab === 'challenges' && (
+          <section>
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-2xl font-semibold">Challenges ({challenges.length})</h2>
               <button
-                type="submit"
-                className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+                onClick={handleAddChallenge}
+                className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
               >
-                Create Challenge
+                Add New Challenge
               </button>
             </div>
-          </form>
-        </div>
+            <div className="bg-white shadow rounded-lg overflow-hidden">
+              <table className="min-w-full">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Title</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Difficulty</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Category</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {challenges.map(challenge => (
+                    <tr key={challenge._id}>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                        {challenge.title}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {challenge.difficulty}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {challenge.category}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                          challenge.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                        }`}>
+                          {challenge.isActive ? 'Active' : 'Inactive'}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="flex space-x-2">
+                          <button
+                            onClick={() => handleEditChallenge(challenge._id)}
+                            className="text-indigo-600 hover:text-indigo-900"
+                          >
+                            Edit
+                          </button>
+                          <button
+                            onClick={() => handleDeleteChallenge(challenge._id)}
+                            className="text-red-600 hover:text-red-900"
+                          >
+                            Delete
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </section>
+        )}
+
+        {activeTab === 'forum' && (
+          <section>
+            <h2 className="text-2xl font-semibold mb-4">Forum Posts</h2>
+            <div className="bg-white shadow rounded-lg overflow-hidden">
+              <table className="min-w-full">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Title</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Author</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {forumPosts.map(post => (
+                    <tr key={post._id}>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                        {post.title}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {post.author.name}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {new Date(post.createdAt).toLocaleDateString()}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <button
+                          onClick={() => handleDeleteForumPost(post._id)}
+                          className="text-red-600 hover:text-red-900"
+                        >
+                          Delete
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </section>
+        )}
       </div>
     </Layout>
   );
