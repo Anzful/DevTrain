@@ -25,8 +25,17 @@ async function setAdmin() {
       process.exit(1);
     }
 
+    // Set isAdmin to true and save
     user.isAdmin = true;
     await user.save();
+
+    // Verify the update
+    const updatedUser = await User.findById(user._id);
+    console.log('Updated user:', {
+      email: updatedUser.email,
+      isAdmin: updatedUser.isAdmin,
+      _id: updatedUser._id
+    });
 
     console.log(`Successfully set ${email} as admin`);
     

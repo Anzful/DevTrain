@@ -1,10 +1,10 @@
 // backend/routes/leaderboards.js
 const express = require('express');
 const router = express.Router();
-const { getLeaderboard } = require('../controllers/leaderboardController');
-const auth = require('../middleware/auth');
+const { auth } = require('../middleware/auth');
+const { getLeaderboards } = require('../controllers/leaderboardController');
 
-// Get leaderboard data
-router.get('/', auth, getLeaderboard);
+// Get leaderboards data
+router.get('/', auth, getLeaderboards);
 
 module.exports = router;

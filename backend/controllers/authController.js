@@ -82,15 +82,7 @@ exports.register = async (req, res) => {
 
 exports.login = async (req, res) => {
   try {
-    console.log('Login attempt for:', req.body.email);
     const { email, password } = req.body;
-
-    // Validate input
-    if (!email || !password) {
-      return res.status(400).json({
-        message: 'Please provide both email and password'
-      });
-    }
 
     // Find user
     const user = await User.findOne({ email: email.toLowerCase() });
@@ -98,53 +90,40 @@ exports.login = async (req, res) => {
       return res.status(401).json({ message: 'Invalid credentials' });
     }
 
-    // Check if user has a password set
-    if (!user.password) {
-      return res.status(401).json({ 
-        message: 'Account needs password reset'
-      });
-    }
-
     // Check password
-    const isMatch = await user.comparePassword(password);
+    const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
       return res.status(401).json({ message: 'Invalid credentials' });
     }
 
-    // Create token
+    // Create token with admin role if user is admin
     const token = jwt.sign(
       { 
         id: user._id,
-        role: user.isAdmin ? 'admin' : 'student'
+        role: user.isAdmin ? 'admin' : 'user'
       },
       process.env.JWT_SECRET || 'your-secret-key',
       { expiresIn: '24h' }
     );
 
-    // Send response
+    console.log('Login successful:', {
+      userId: user._id,
+      isAdmin: user.isAdmin,
+      role: user.isAdmin ? 'admin' : 'user'
+    });
+
     res.json({
-      success: true,
       token,
       user: {
         id: user._id,
         name: user.name,
         email: user.email,
-        level: user.level || 1,
-        currentBadge: user.currentBadge || {
-          name: 'Novice Coder',
-          image: '🔰'
-        },
-        experiencePoints: user.experiencePoints || 0,
-        isAdmin: user.isAdmin || false
+        isAdmin: user.isAdmin
       }
     });
-
   } catch (error) {
     console.error('Login error:', error);
-    res.status(500).json({
-      message: 'Error in login',
-      error: error.message
-    });
+    res.status(500).json({ message: 'Error logging in' });
   }
 };
 

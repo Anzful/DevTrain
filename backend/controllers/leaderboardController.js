@@ -1,53 +1,90 @@
 const { User } = require('../models/User');
+const Submission = require('../models/Submission');
 
-exports.getLeaderboard = async (req, res) => {
+exports.getLeaderboards = async (req, res) => {
   try {
-    const { timeframe } = req.query;
-    let query = {};
+    console.log('Fetching leaderboards...');
 
-    // Add timeframe filtering
-    if (timeframe === 'month') {
-      const lastMonth = new Date();
-      lastMonth.setMonth(lastMonth.getMonth() - 1);
-      query.createdAt = { $gte: lastMonth };
-    } else if (timeframe === 'week') {
-      const lastWeek = new Date();
-      lastWeek.setDate(lastWeek.getDate() - 7);
-      query.createdAt = { $gte: lastWeek };
+    // Get all users with non-zero experience points
+    const users = await User.find(
+      { experiencePoints: { $exists: true, $gt: 0 } },
+      'name experiencePoints level'
+    ).sort({ experiencePoints: -1 });
+
+    console.log('Found users:', users.length);
+
+    // If no users found with experience points, get all users
+    if (!users || users.length === 0) {
+      console.log('No users with experience points found, fetching all users...');
+      const allUsers = await User.find({}, 'name experiencePoints level')
+        .sort({ createdAt: -1 });
+
+      console.log('Found all users:', allUsers.length);
+
+      const defaultLeaderboards = {
+        experiencePoints: allUsers.map(user => ({
+          id: user._id,
+          name: user.name,
+          experiencePoints: user.experiencePoints || 0,
+          level: user.level || 1
+        })),
+        performance: []
+      };
+
+      console.log('Returning default leaderboards:', defaultLeaderboards);
+      return res.json(defaultLeaderboards);
     }
 
-    // Fetch users and sort by experience points
-    const users = await User.find(query)
-      .select('name email experiencePoints level currentBadge successfulSubmissions')
-      .sort({ experiencePoints: -1 })
-      .limit(100)
-      .lean();
-
-    if (!users) {
-      return res.status(404).json({ message: 'No users found' });
-    }
-
-    // Format the response
-    const leaderboardData = users.map(user => ({
-      _id: user._id,
-      name: user.name,
-      email: user.email,
-      experiencePoints: user.experiencePoints || 0,
-      level: user.level || 1,
-      currentBadge: user.currentBadge || {
-        name: 'Novice Coder',
-        image: '🔰'
+    // Get all successful submissions
+    const submissions = await Submission.aggregate([
+      { $match: { status: 'success' } },
+      {
+        $group: {
+          _id: '$userId',
+          totalScore: { $sum: '$score' },
+          successfulSubmissions: { $sum: 1 }
+        }
       },
-      successfulSubmissions: user.successfulSubmissions || 0
-    }));
+      { $sort: { totalScore: -1 } }
+    ]);
 
-    res.json(leaderboardData);
+    console.log('Found submissions:', submissions.length);
 
+    // Create user map for quick lookup
+    const userMap = users.reduce((map, user) => {
+      map[user._id.toString()] = user;
+      return map;
+    }, {});
+
+    const leaderboards = {
+      experiencePoints: users.map(user => ({
+        id: user._id,
+        name: user.name || 'Anonymous',
+        experiencePoints: user.experiencePoints || 0,
+        level: user.level || 1
+      })),
+      performance: submissions.map(submission => {
+        const user = userMap[submission._id.toString()];
+        return {
+          id: submission._id,
+          name: user ? user.name : 'Unknown User',
+          score: submission.totalScore || 0,
+          submissions: submission.successfulSubmissions || 0
+        };
+      }).filter(entry => entry.name !== 'Unknown User') // Remove unknown users
+    };
+
+    console.log('Final leaderboards data:', {
+      experiencePointsCount: leaderboards.experiencePoints.length,
+      performanceCount: leaderboards.performance.length
+    });
+
+    res.json(leaderboards);
   } catch (error) {
-    console.error('Leaderboard error:', error);
-    res.status(500).json({
-      message: 'Error fetching leaderboard data',
-      error: error.message
+    console.error('Error fetching leaderboards:', error);
+    res.status(500).json({ 
+      message: 'Error fetching leaderboards',
+      error: error.message 
     });
   }
 }; 

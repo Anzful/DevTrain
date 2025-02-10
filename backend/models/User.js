@@ -16,19 +16,17 @@ const BADGES = {
 const userSchema = new mongoose.Schema({
   name: {
     type: String,
-    required: [true, 'Name is required']
+    required: true
   },
   email: {
     type: String,
-    required: [true, 'Email is required'],
+    required: true,
     unique: true,
-    trim: true,
     lowercase: true
   },
   password: {
     type: String,
-    required: [true, 'Password is required'],
-    minlength: [6, 'Password must be at least 6 characters']
+    required: true
   },
   isAdmin: {
     type: Boolean,
@@ -43,22 +41,8 @@ const userSchema = new mongoose.Schema({
     default: 1
   },
   currentBadge: {
-    name: {
-      type: String,
-      default: BADGES.NOVICE.name
-    },
-    image: {
-      type: String,
-      default: BADGES.NOVICE.image
-    }
-  },
-  successfulSubmissions: {
-    type: Number,
-    default: 0
-  },
-  totalSubmissions: {
-    type: Number,
-    default: 0
+    name: String,
+    image: String
   },
   lastActive: {
     type: Date,
@@ -66,15 +50,33 @@ const userSchema = new mongoose.Schema({
   },
   role: { type: String, enum: ['admin', 'instructor', 'student'], default: 'student' },
   badges: [String]
-}, {
-  timestamps: true // Adds createdAt and updatedAt fields
+}, { 
+  timestamps: true,
+  toJSON: { virtuals: true },
+  toObject: { virtuals: true }
 });
 
-// Pre-save middleware to hash password
+// Add virtual for total submissions
+userSchema.virtual('totalSubmissions', {
+  ref: 'Submission',
+  localField: '_id',
+  foreignField: 'userId',
+  count: true
+});
+
+// Add virtual for successful submissions
+userSchema.virtual('successfulSubmissions', {
+  ref: 'Submission',
+  localField: '_id',
+  foreignField: 'userId',
+  count: true,
+  match: { status: 'success' }
+});
+
+// Hash password before saving
 userSchema.pre('save', async function(next) {
-  if (!this.isModified('password')) {
-    return next();
-  }
+  if (!this.isModified('password')) return next();
+  
   try {
     const salt = await bcrypt.genSalt(10);
     this.password = await bcrypt.hash(this.password, salt);

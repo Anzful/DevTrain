@@ -1,7 +1,8 @@
 const Message = require('../models/Message');
 const { User } = require('../models/User');
 
-exports.getMessages = async (req, res) => {
+// Export functions directly
+const getMessages = async (req, res) => {
   try {
     const { userId } = req.params;
     const currentUserId = req.user.id;
@@ -28,7 +29,7 @@ exports.getMessages = async (req, res) => {
   }
 };
 
-exports.sendMessage = async (req, res) => {
+const sendMessage = async (req, res) => {
   try {
     const { to, content } = req.body;
     const from = req.user.id;
@@ -51,11 +52,9 @@ exports.sendMessage = async (req, res) => {
     const savedMessage = await message.save();
     console.log('Message saved:', savedMessage);
 
-    // Get the populated message
     const populatedMessage = await Message.findById(savedMessage._id)
       .lean();
 
-    // Emit to socket if recipient is connected
     if (req.io) {
       const recipientSocketId = req.app.get('connectedUsers')?.get(to);
       if (recipientSocketId) {
@@ -71,4 +70,10 @@ exports.sendMessage = async (req, res) => {
       error: error.message 
     });
   }
+};
+
+// Export the functions
+module.exports = {
+  getMessages,
+  sendMessage
 }; 

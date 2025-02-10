@@ -1,12 +1,37 @@
 const { User } = require('../models/User');
 const Submission = require('../models/Submission');
 
+// Get all users
+exports.getUsers = async (req, res) => {
+  try {
+    const users = await User.find({}, '-password');
+    res.json(users);
+  } catch (error) {
+    console.error('Error fetching users:', error);
+    res.status(500).json({ message: 'Error fetching users' });
+  }
+};
+
+// Get user profile
+exports.getUserProfile = async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id, '-password');
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+    res.json(user);
+  } catch (error) {
+    console.error('Error fetching user profile:', error);
+    res.status(500).json({ message: 'Error fetching user profile' });
+  }
+};
+
+// Get user stats
 exports.getUserStats = async (req, res) => {
   try {
-    const userId = req.user.id; // Get user ID from auth middleware
-
-    // Get user data
+    const userId = req.user.id;
     const user = await User.findById(userId);
+    
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
@@ -38,7 +63,6 @@ exports.getUserStats = async (req, res) => {
     const nextLevelXP = Math.pow(currentLevel, 2) * 100;
     const progress = ((user.experiencePoints - currentLevelXP) / (nextLevelXP - currentLevelXP)) * 100;
 
-    // Prepare stats object
     const stats = {
       userId: user._id,
       name: user.name,
@@ -69,14 +93,10 @@ exports.getUserStats = async (req, res) => {
       lastActive: user.lastActive || user.updatedAt
     };
 
-    console.log('User stats:', { userId: stats.userId, isAdmin: stats.isAdmin }); // Debug log
     res.json(stats);
   } catch (error) {
     console.error('Error fetching user stats:', error);
-    res.status(500).json({ 
-      message: 'Error fetching user stats',
-      error: error.message 
-    });
+    res.status(500).json({ message: 'Error fetching user stats' });
   }
 };
 
@@ -84,18 +104,13 @@ exports.getUserStats = async (req, res) => {
 exports.updateLastActive = async (req, res) => {
   try {
     const userId = req.user.id;
-    
     await User.findByIdAndUpdate(userId, {
       lastActive: new Date()
     });
-
     res.json({ success: true });
   } catch (error) {
     console.error('Error updating last active:', error);
-    res.status(500).json({ 
-      message: 'Error updating last active timestamp',
-      error: error.message 
-    });
+    res.status(500).json({ message: 'Error updating last active timestamp' });
   }
 };
 
