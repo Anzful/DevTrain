@@ -1,222 +1,138 @@
-import { useState, useEffect, useRef } from 'react';
-import useSWR from 'swr';
+import { useState, useEffect } from 'react';
 import Layout from '../components/Layout';
-import io from 'socket.io-client';
+import { toast } from 'react-hot-toast';
+import ChatWindow from '../components/ChatWindow';
 
 export default function DirectMessages() {
   const [users, setUsers] = useState([]);
-  const [searchQuery, setSearchQuery] = useState('');
   const [filteredUsers, setFilteredUsers] = useState([]);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [selectedUser, setSelectedUser] = useState(null);
-  const [messages, setMessages] = useState([]);
-  const [input, setInput] = useState('');
-  const messagesEndRef = useRef(null);
-  const socketRef = useRef(null);
-
-  const fetcher = (url) =>
-    fetch(url, {
-      headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
-    }).then((res) => res.json());
-
-  const { data: usersData, error: usersError } = useSWR(
-    'http://localhost:5000/api/users',
-    fetcher
-  );
+  const [showChat, setShowChat] = useState(false);
 
   useEffect(() => {
-    if (usersData) {
-      const currentUserId = localStorage.getItem('userId');
-      const otherUsers = usersData.filter((user) => user._id !== currentUserId);
-      setUsers(otherUsers);
-      setFilteredUsers(otherUsers);
-    }
-  }, [usersData]);
-
-  useEffect(() => {
-    if (selectedUser) {
-      const currentUserId = localStorage.getItem('userId');
-      fetch(`http://localhost:5000/api/messages/${currentUserId}/${selectedUser._id}`, {
-        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
-      })
-        .then((res) => res.json())
-        .then((data) => {
-          setMessages(data);
-        })
-        .catch((error) => console.error('Error loading messages:', error));
-    }
-  }, [selectedUser]);
-
-  // Initialize Socket.IO only once
-  useEffect(() => {
-    const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5000';
-    const currentUserId = localStorage.getItem('userId');
-    
-    console.log('Current userId from localStorage:', currentUserId); // Debug log
-    
-    // Redirect to login if no userId is found
-    if (!currentUserId) {
-      console.log('No userId found, redirecting to login...');
-      window.location.href = '/login';
-      return;
-    }
-
-    socketRef.current = io(backendUrl);
-    console.log('Attempting socket connection to:', backendUrl);
-
-    // Handle socket connection events
-    socketRef.current.on('connect', () => {
-      console.log('Socket connected with ID:', socketRef.current.id);
-      console.log('About to register with userId:', currentUserId); // Debug log
-      socketRef.current.emit('register', currentUserId);
-      console.log('Sent registration for user:', currentUserId);
-    });
-
-    socketRef.current.on('connect_error', (error) => {
-      console.error('Socket connection error:', error);
-    });
-
-    socketRef.current.on('direct message', (data) => {
-      console.log("New direct message received:", data);
-      setMessages((prev) => {
-        if (data.from !== localStorage.getItem('userId')) {
-          return [...prev, data];
+    const fetchUsers = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        if (!token) {
+          throw new Error('No token found');
         }
-        return prev;
-      });
-    });
 
-    return () => {
-      if (socketRef.current) {
-        console.log('Disconnecting socket');
-        socketRef.current.disconnect();
+        const response = await fetch('http://localhost:5000/api/users', {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to fetch users');
+        }
+
+        const data = await response.json();
+        const currentUserId = localStorage.getItem('userId');
+        const otherUsers = Array.isArray(data) 
+          ? data.filter(user => user._id !== currentUserId)
+          : [];
+
+        setUsers(otherUsers);
+        setFilteredUsers(otherUsers);
+        setError(null);
+      } catch (error) {
+        console.error('Error fetching users:', error);
+        setError('Failed to load users');
+        toast.error('Failed to load users');
+      } finally {
+        setLoading(false);
       }
     };
-  }, []); // Empty dependency array for initial setup
 
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
+    fetchUsers();
+  }, []);
 
   const handleSearch = (e) => {
-    setSearchQuery(e.target.value);
-    const query = e.target.value.toLowerCase();
-    const filtered = users.filter((user) =>
-      user.name.toLowerCase().includes(query)
+    const term = e.target.value.toLowerCase();
+    setSearchTerm(term);
+    
+    const filtered = users.filter(user => 
+      user.name?.toLowerCase().includes(term) ||
+      user.email?.toLowerCase().includes(term)
     );
+    
     setFilteredUsers(filtered);
   };
 
-  const selectUser = (user) => {
+  const handleStartChat = (user) => {
     setSelectedUser(user);
-    setMessages([]); // clear conversation when selecting a new user
+    setShowChat(true);
   };
 
-  const sendMessage = () => {
-    const currentUserId = localStorage.getItem('userId');
-    console.log('Sending message with userId:', currentUserId);
-
-    if (!currentUserId) {
-      console.error('No userId found, cannot send message');
-      window.location.href = '/login';
-      return;
-    }
-
-    if (input.trim() !== '' && selectedUser) {
-      const messageData = {
-        from: currentUserId,
-        to: selectedUser._id,
-        message: input,
-        timestamp: new Date().toISOString()
-      };
-      
-      setMessages((prev) => [...prev, messageData]);
-      
-      fetch('http://localhost:5000/api/messages', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${localStorage.getItem('token')}`,
-        },
-        body: JSON.stringify(messageData),
-      }).catch(error => console.error('Error saving message:', error));
-      
-      socketRef.current.emit('direct message', messageData);
-      setInput('');
-    }
+  const handleCloseChat = () => {
+    setShowChat(false);
+    setSelectedUser(null);
   };
 
-  const handleKeyDown = (e) => {
-    if (e.key === 'Enter') {
-      e.preventDefault();
-      sendMessage();
-    }
-  };
-
-  if (usersError)
+  if (loading) {
     return (
       <Layout>
-        <div>Error loading users</div>
+        <div className="flex justify-center items-center min-h-screen">
+          <div className="text-lg">Loading users...</div>
+        </div>
       </Layout>
     );
+  }
 
   return (
     <Layout>
-      <div className="p-4">
-        <h1 className="text-2xl font-bold mb-4">Direct Messages</h1>
-        <div className="flex">
-          <div className="w-1/3 p-2 border-r">
-            <input
-              type="text"
-              placeholder="Search users..."
-              value={searchQuery}
-              onChange={handleSearch}
-              className="border p-2 w-full mb-4"
-            />
-            {filteredUsers.map((user) => (
+      <div className="max-w-6xl mx-auto p-4">
+        <div className="mb-6">
+          <input
+            type="text"
+            placeholder="Search users..."
+            className="w-full p-2 border rounded-lg"
+            value={searchTerm}
+            onChange={handleSearch}
+          />
+        </div>
+
+        <div className="grid gap-4">
+          {filteredUsers.length > 0 ? (
+            filteredUsers.map(user => (
               <div
                 key={user._id}
-                onClick={() => selectUser(user)}
-                className={`p-2 cursor-pointer border-b ${
-                  selectedUser && selectedUser._id === user._id ? 'bg-gray-200' : ''
-                }`}
+                className="bg-white p-4 rounded-lg shadow flex items-center justify-between"
               >
-                {user.name}
+                <div className="flex items-center space-x-4">
+                  <div className="text-2xl">{user.currentBadge?.image || '🔰'}</div>
+                  <div>
+                    <h3 className="font-semibold">{user.name}</h3>
+                    <p className="text-sm text-gray-500">
+                      Level {user.level || 1}
+                    </p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => handleStartChat(user)}
+                  className="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 transition-colors"
+                >
+                  Message
+                </button>
               </div>
-            ))}
-          </div>
-          <div className="w-2/3 p-2">
-            {selectedUser ? (
-              <>
-                <h2 className="text-xl font-bold mb-2">
-                  Chat with {selectedUser.name}
-                </h2>
-                <div className="h-80 overflow-y-scroll border p-2 mb-2">
-                  {messages.map((msg, index) => (
-                    <div key={index} className={`mb-2 ${msg.from === localStorage.getItem('userId') ? 'text-right' : 'text-left'}`}>
-                      <span className="inline-block p-2 rounded bg-blue-200">{msg.message}</span>
-                    </div>
-                  ))}
-                  <div ref={messagesEndRef} />
-                </div>
-                <div className="flex">
-                  <input
-                    type="text"
-                    placeholder="Type a message..."
-                    value={input}
-                    onChange={(e) => setInput(e.target.value)}
-                    onKeyDown={handleKeyDown}
-                    className="flex-1 border p-2"
-                  />
-                  <button onClick={sendMessage} className="ml-2 px-4 py-2 bg-blue-600 text-white rounded">
-                    Send
-                  </button>
-                </div>
-              </>
-            ) : (
-              <div>Select a user to start a conversation.</div>
-            )}
-          </div>
+            ))
+          ) : (
+            <div className="text-center text-gray-500 py-8">
+              {searchTerm ? 'No users found matching your search' : 'No other users available'}
+            </div>
+          )}
         </div>
+
+        {showChat && selectedUser && (
+          <ChatWindow
+            user={selectedUser}
+            onClose={handleCloseChat}
+          />
+        )}
       </div>
     </Layout>
   );

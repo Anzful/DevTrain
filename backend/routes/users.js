@@ -1,25 +1,31 @@
 // backend/routes/users.js
 const express = require('express');
 const router = express.Router();
-const User = require('../models/User'); // Uses your provided User model
-const userController = require('../controllers/userController');
-const auth = require('../middleware/authMiddleware');
+const { User } = require('../models/User');
+const auth = require('../middleware/auth');
+const { getUserStats, updateLastActive } = require('../controllers/userController');
 
-// GET /api/users - Retrieve all users (public)
-router.get('/', async (req, res) => {
+// Get all users
+router.get('/', auth, async (req, res) => {
   try {
-    const users = await User.find({});
+    const users = await User.find()
+      .select('-password')
+      .sort({ name: 1 });
+    
     res.json(users);
   } catch (error) {
-    console.error("Error fetching users:", error);
-    res.status(500).json({ error: "Server error while fetching users." });
+    console.error('Error fetching users:', error);
+    res.status(500).json({ 
+      message: 'Error fetching users',
+      error: error.message 
+    });
   }
 });
 
-// Get user stats (protected route)
-router.get('/stats', auth.verifyToken, userController.getUserStats);
+// Get user stats
+router.get('/stats', auth, getUserStats);
 
-// Update last active (protected route)
-router.post('/last-active', auth.verifyToken, userController.updateLastActive);
+// Update last active
+router.post('/last-active', auth, updateLastActive);
 
 module.exports = router;

@@ -133,12 +133,14 @@ export default function ChallengePage() {
 
         <div className="mb-4">
           <h2 className="text-xl font-semibold mb-2">Your Solution</h2>
-          <CodeEditor
-            value={code}
-            onChange={setCode}
-            language={language}
-            className="min-h-[300px]"
-          />
+          <div className="editor-container">
+            <CodeEditor
+              value={code}
+              onChange={setCode}
+              language="javascript"
+              theme="monokai"
+            />
+          </div>
         </div>
 
         <button

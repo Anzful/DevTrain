@@ -47,11 +47,11 @@ export default function Dashboard() {
     );
   }
 
-  if (error) {
+  if (error || !userData) {
     return (
       <Layout>
         <div className="flex justify-center items-center h-screen">
-          <div className="text-red-500">{error}</div>
+          <div className="text-red-500">{error || 'Failed to load user data'}</div>
         </div>
       </Layout>
     );
@@ -60,23 +60,49 @@ export default function Dashboard() {
   return (
     <Layout>
       <div className="max-w-6xl mx-auto p-4">
+        <div className="bg-white rounded-lg shadow p-6 mb-6">
+          <div className="flex items-center space-x-4">
+            <div className="text-4xl">{userData.currentBadge?.image || '🔰'}</div>
+            <div>
+              <h2 className="text-xl font-bold">{userData.name}</h2>
+              <p className="text-gray-600">{userData.currentBadge?.name || 'Novice Coder'}</p>
+            </div>
+          </div>
+          
+          <div className="mt-4">
+            <div className="flex justify-between mb-1">
+              <span>Level {userData.level || 1}</span>
+              <span>{userData.experiencePoints || 0} XP</span>
+            </div>
+            <div className="w-full bg-gray-200 rounded-full h-2.5">
+              <div 
+                className="bg-blue-600 h-2.5 rounded-full" 
+                style={{ width: `${userData.levelProgress || 0}%` }}
+              ></div>
+            </div>
+            <div className="text-sm text-gray-600 mt-1">
+              {Math.round(userData.levelProgress || 0)}% to Level {(userData.level || 1) + 1}
+            </div>
+          </div>
+        </div>
+
         <h1 className="text-2xl font-bold mb-6">Dashboard</h1>
         
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
           <div className="bg-white p-4 rounded-lg shadow">
             <h2 className="text-lg font-semibold mb-2">Experience Points</h2>
-            <p className="text-3xl font-bold text-blue-600">{userData.experiencePoints}</p>
+            <p className="text-3xl font-bold text-blue-600">{userData.experiencePoints || 0}</p>
           </div>
           
           <div className="bg-white p-4 rounded-lg shadow">
             <h2 className="text-lg font-semibold mb-2">Challenges Completed</h2>
-            <p className="text-3xl font-bold text-green-600">{userData.successfulSubmissions}</p>
+            <p className="text-3xl font-bold text-green-600">{userData.successfulSubmissions || 0}</p>
           </div>
           
           <div className="bg-white p-4 rounded-lg shadow">
             <h2 className="text-lg font-semibold mb-2">Success Rate</h2>
             <p className="text-3xl font-bold text-purple-600">
-              {Math.round(userData.successRate)}%
+              {Math.round(userData.successRate || 0)}%
             </p>
           </div>
         </div>
