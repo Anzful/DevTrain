@@ -132,15 +132,13 @@ userSchema.methods.updateLevelAndBadge = function() {
   const newLevel = calculateLevel(this.experiencePoints);
   const newBadge = getCurrentBadge(this.experiencePoints);
   
-  const updates = {
+  return {
     level: newLevel,
     currentBadge: {
       name: newBadge.name,
       image: newBadge.image
     }
   };
-
-  return updates;
 };
 
 // Static method to get level progress

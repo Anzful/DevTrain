@@ -1,7 +1,7 @@
 // backend/controllers/submissionController.js
 const Submission = require('../models/Submission');
 const Challenge = require('../models/Challenge');
-const { User, BADGES } = require('../models/User');
+const { User } = require('../models/User');
 const axios = require('axios');
 
 exports.submitSolution = async (req, res) => {
@@ -9,13 +9,20 @@ exports.submitSolution = async (req, res) => {
     const { challengeId, code, language } = req.body;
     const userId = req.user.id;
 
-    console.log('Processing submission for user:', userId);
+    console.log('Starting submission process:', { userId, challengeId, language });
 
     // Get the challenge
     const challenge = await Challenge.findById(challengeId);
     if (!challenge) {
+      console.log('Challenge not found:', challengeId);
       return res.status(404).json({ message: 'Challenge not found' });
     }
+
+    console.log('Found challenge:', {
+      id: challenge._id,
+      title: challenge.title,
+      difficulty: challenge.difficulty
+    });
 
     // Create initial submission
     const submission = new Submission({
@@ -23,7 +30,8 @@ exports.submitSolution = async (req, res) => {
       challenge: challengeId,
       code,
       language,
-      passed: false
+      passed: false,
+      status: 'pending'
     });
 
     // Process test cases
@@ -81,74 +89,127 @@ exports.submitSolution = async (req, res) => {
       }
     }
 
+    console.log('All test results:', testResults);
+    console.log('Overall pass status:', overallPass);
+
+    // Update submission status
     submission.passed = overallPass;
-    submission.testResults = testResults;
-    await submission.save();
-
-    // Always update totalSubmissions
-    await User.findByIdAndUpdate(userId, {
-      $inc: { totalSubmissions: 1 }
+    submission.status = overallPass ? 'passed' : 'failed';
+    
+    console.log('Saving submission:', {
+      id: submission._id,
+      passed: submission.passed,
+      status: submission.status
     });
-
-    // Update user stats if passed
-    if (overallPass) {
-      const experiencePoints = 
-        challenge.difficulty === 'easy' ? 10 :
-        challenge.difficulty === 'medium' ? 20 : 30;
-
-      // Get user
-      const user = await User.findById(userId);
-      const oldLevel = user.level;
-      
-      // Update XP
-      user.experiencePoints += experiencePoints;
-      
-      // Update level and badge
-      const updates = user.updateLevelAndBadge();
-      user.level = updates.level;
-      user.currentBadge = updates.currentBadge;
-      
-      // Save updates
-      await user.save();
-
-      // Check if user leveled up
-      const leveledUp = updates.level > oldLevel;
-      
-      console.log('Updated user stats:', {
-        userId,
-        newExperiencePoints: user.experiencePoints,
-        newLevel: updates.level,
-        newBadge: updates.currentBadge,
-        leveledUp
-      });
-
-      // Include level up information in response
-      res.json({
+    
+    try {
+      await submission.save();
+      console.log('Submission saved successfully');
+    } catch (saveError) {
+      console.error('Error saving submission:', saveError);
+      throw saveError;  // Re-throw to be caught by outer try-catch
+    }
+    
+    // If tests failed, return early
+    if (!overallPass) {
+      console.log('Tests failed, returning without updating user stats');
+      return res.json({
         success: true,
         submission: {
           id: submission._id,
-          passed: overallPass
-        },
-        testResults,
-        experiencePointsEarned: experiencePoints,
-        levelUp: leveledUp ? {
-          newLevel: updates.level,
-          newBadge: updates.currentBadge
-        } : null
-      });
-    } else {
-      res.json({
-        success: true,
-        submission: {
-          id: submission._id,
-          passed: overallPass
+          passed: false
         },
         testResults
       });
     }
 
+    console.log('Tests passed, attempting to update user stats');
+
+    try {
+      // Get challenge difficulty and calculate XP
+      const difficulty = challenge.difficulty.toLowerCase();
+      const experiencePoints = 
+        difficulty === 'easy' ? 10 :
+        difficulty === 'medium' ? 20 : 30;
+
+      console.log('Challenge details:', {
+        difficulty,
+        experiencePoints
+      });
+
+      // Find and update user
+      console.log('Finding user with ID:', userId);
+      const user = await User.findById(userId);
+      
+      if (!user) {
+        console.error('User not found:', userId);
+        throw new Error('User not found');
+      }
+
+      console.log('Current user stats:', {
+        id: user._id,
+        xp: user.experiencePoints,
+        level: user.level,
+        badge: user.currentBadge
+      });
+
+      // Update user stats
+      const oldXP = user.experiencePoints || 0;
+      const oldLevel = user.level || 1;
+
+      user.experiencePoints = oldXP + experiencePoints;
+      
+      // Update level and badge
+      const updates = user.updateLevelAndBadge();
+      user.level = updates.level;
+      user.currentBadge = updates.currentBadge;
+
+      console.log('New user stats:', {
+        xp: user.experiencePoints,
+        level: user.level,
+        badge: user.currentBadge
+      });
+
+      // Save user changes
+      await user.save();
+      console.log('User stats updated successfully');
+
+      // Return success response with updates
+      return res.json({
+        success: true,
+        submission: {
+          id: submission._id,
+          passed: true
+        },
+        testResults,
+        userUpdates: {
+          experiencePointsEarned: experiencePoints,
+          oldXP,
+          newTotalXP: user.experiencePoints,
+          oldLevel,
+          newLevel: user.level,
+          newBadge: user.currentBadge
+        }
+      });
+
+    } catch (updateError) {
+      console.error('Error updating user stats:', updateError);
+      console.error(updateError.stack);
+      return res.json({
+        success: true,
+        submission: {
+          id: submission._id,
+          passed: true
+        },
+        testResults,
+        error: 'Submission successful but failed to update user stats',
+        errorDetails: updateError.message
+      });
+    }
+
   } catch (error) {
     console.error('Submission error:', error);
+    console.error(error.stack);
     res.status(500).json({
       success: false,
       message: 'Error processing submission',
