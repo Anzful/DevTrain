@@ -8,6 +8,7 @@
     },
     "dependencies": {
         "@monaco-editor/react": "^4.6.0",
+        "@tailwindcss/forms": "^0.5.7",
         "chart.js": "^4.4.7",
         "css-loader": "^7.1.2",
         "monaco-editor": "^0.33.0",
