@@ -38,14 +38,52 @@ exports.addComment = async (req, res) => {
 
 exports.deletePost = async (req, res) => {
   try {
+    console.log('Delete request received for post:', req.params.id);
+    console.log('Request user:', req.user);
+    console.log('Request headers:', req.headers);
+
+    // First check if the ID is valid
+    if (!req.params.id.match(/^[0-9a-fA-F]{24}$/)) {
+      return res.status(400).json({ message: 'Invalid post ID format' });
+    }
+
+    // Try to find the post first
     const post = await ForumPost.findById(req.params.id);
+    
     if (!post) {
+      console.log('Post not found with ID:', req.params.id);
       return res.status(404).json({ message: 'Post not found' });
     }
-    
-    await ForumPost.findByIdAndDelete(req.params.id);
-    res.json({ message: 'Post deleted successfully' });
+
+    console.log('Found post:', post);
+
+    try {
+      // Attempt to delete the post
+      const result = await ForumPost.findByIdAndDelete(req.params.id);
+      
+      if (!result) {
+        console.log('Delete operation returned null');
+        return res.status(500).json({ message: 'Failed to delete post' });
+      }
+
+      console.log('Post deleted successfully:', result);
+      return res.json({ 
+        message: 'Post deleted successfully', 
+        deletedPost: result 
+      });
+    } catch (deleteError) {
+      console.error('Error during delete operation:', deleteError);
+      return res.status(500).json({ 
+        message: 'Failed to delete post',
+        error: deleteError.message
+      });
+    }
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('Error in deletePost:', err);
+    return res.status(500).json({ 
+      message: 'Failed to delete post',
+      error: err.message,
+      stack: process.env.NODE_ENV === 'development' ? err.stack : undefined
+    });
   }
 };

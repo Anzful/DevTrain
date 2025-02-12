@@ -89,22 +89,33 @@ export default function AdminDashboard() {
 
   const handleDeleteForumPost = async (postId) => {
     if (!confirm('Are you sure you want to delete this post?')) {
+      return;
+    }
+
     try {
+      console.log('Attempting to delete post:', postId);
       const token = localStorage.getItem('token');
-      const response = await fetch(`http://localhost:5000/api/forum/posts/${postId}`, {
+      
+      const response = await fetch(`http://localhost:5000/api/forum/${postId}`, {
         method: 'DELETE',
         headers: {
-          'Authorization': `Bearer ${token}`
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
         }
       });
 
-      if (!response.ok) throw new Error('Failed to delete post');
-      
+      const data = await response.json();
+      console.log('Delete response:', { status: response.status, data });
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Failed to delete post');
+      }
+
       setForumPosts(posts => posts.filter(post => post._id !== postId));
       toast.success('Post deleted successfully');
     } catch (error) {
-      console.error('Error deleting post:', error);
-      toast.error('Failed to delete post');
+      console.error('Delete error details:', error);
+      toast.error(error.message || 'Failed to delete post');
     }
   };
 
