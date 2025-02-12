@@ -35,3 +35,17 @@ exports.addComment = async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 };
+
+exports.deletePost = async (req, res) => {
+  try {
+    const post = await ForumPost.findById(req.params.id);
+    if (!post) {
+      return res.status(404).json({ message: 'Post not found' });
+    }
+    
+    await ForumPost.findByIdAndDelete(req.params.id);
+    res.json({ message: 'Post deleted successfully' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};

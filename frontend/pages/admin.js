@@ -51,27 +51,34 @@ export default function AdminDashboard() {
     try {
       const token = localStorage.getItem('token');
       
-      // Fetch users
+      // Fetch users, challenges, and forum posts
       const usersResponse = await fetch('http://localhost:5000/api/users', {
         headers: {
           'Authorization': `Bearer ${token}`
         }
       });
       
-      // Fetch challenges
       const challengesResponse = await fetch('http://localhost:5000/api/challenges', {
         headers: {
           'Authorization': `Bearer ${token}`
         }
       });
 
-      const [usersData, challengesData] = await Promise.all([
+      const forumResponse = await fetch('http://localhost:5000/api/forum', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      const [usersData, challengesData, forumData] = await Promise.all([
         usersResponse.json(),
-        challengesResponse.json()
+        challengesResponse.json(),
+        forumResponse.json()
       ]);
 
       setUsers(usersData);
       setChallenges(challengesData);
+      setForumPosts(forumData);
     } catch (error) {
       console.error('Error fetching data:', error);
       toast.error('Failed to load admin data');
@@ -81,6 +88,7 @@ export default function AdminDashboard() {
   };
 
   const handleDeleteForumPost = async (postId) => {
+    if (!confirm('Are you sure you want to delete this post?')) {
     try {
       const token = localStorage.getItem('token');
       const response = await fetch(`http://localhost:5000/api/forum/posts/${postId}`, {
@@ -282,12 +290,13 @@ export default function AdminDashboard() {
 
         {activeTab === 'forum' && (
           <section>
-            <h2 className="text-2xl font-semibold mb-4">Forum Posts</h2>
+            <h2 className="text-2xl font-semibold mb-4">Forum Posts ({forumPosts.length})</h2>
             <div className="bg-white shadow rounded-lg overflow-hidden">
               <table className="min-w-full">
                 <thead className="bg-gray-50">
                   <tr>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Title</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Content</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Author</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
@@ -299,8 +308,11 @@ export default function AdminDashboard() {
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                         {post.title}
                       </td>
+                      <td className="px-6 py-4 text-sm text-gray-500 max-w-xs truncate">
+                        {post.content}
+                      </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {post.author.name}
+                        {post.user?.name || 'Unknown'}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                         {new Date(post.createdAt).toLocaleDateString()}
