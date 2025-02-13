@@ -160,8 +160,8 @@ export default function AdminDashboard() {
   if (loading || !isAdmin) {
     return (
       <Layout>
-        <div className="flex justify-center items-center min-h-screen">
-          <div className="text-xl">Loading...</div>
+        <div className="min-h-screen bg-gradient-to-b from-navy-900 to-navy-800 flex items-center justify-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
         </div>
       </Layout>
     );
@@ -169,180 +169,210 @@ export default function AdminDashboard() {
 
   return (
     <Layout>
-      <div className="max-w-6xl mx-auto p-4">
-        <h1 className="text-3xl font-bold mb-8">Admin Dashboard</h1>
+      <div className="min-h-screen bg-gradient-to-b from-navy-900 to-navy-800 py-8 px-4">
+        <div className="max-w-7xl mx-auto">
+          <h1 className="text-3xl font-bold text-white mb-8">Admin Dashboard</h1>
 
-        <div className="mb-6">
-          <div className="flex space-x-4 border-b">
-            <button
-              onClick={() => setActiveTab('users')}
-              className={`py-2 px-4 ${activeTab === 'users' ? 'border-b-2 border-indigo-600' : ''}`}
-            >
-              Users
-            </button>
-            <button
-              onClick={() => setActiveTab('challenges')}
-              className={`py-2 px-4 ${activeTab === 'challenges' ? 'border-b-2 border-indigo-600' : ''}`}
-            >
-              Challenges
-            </button>
-            <button
-              onClick={() => setActiveTab('forum')}
-              className={`py-2 px-4 ${activeTab === 'forum' ? 'border-b-2 border-indigo-600' : ''}`}
-            >
-              Forum Posts
-            </button>
-          </div>
-        </div>
-
-        {activeTab === 'users' && (
-          <section>
-            <h2 className="text-2xl font-semibold mb-4">Users ({users.length})</h2>
-            <div className="bg-white shadow rounded-lg overflow-hidden">
-              <table className="min-w-full">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Level</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {users.map(user => (
-                    <tr key={user._id}>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="flex items-center">
-                          <div className="text-2xl mr-2">{user.currentBadge?.image || '🔰'}</div>
-                          <div className="text-sm font-medium text-gray-900">{user.name}</div>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{user.email}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{user.level || 1}</td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                          user.isAdmin ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
-                        }`}>
-                          {user.isAdmin ? 'Admin' : 'User'}
-                        </span>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </section>
-        )}
-
-        {activeTab === 'challenges' && (
-          <section>
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-2xl font-semibold">Challenges ({challenges.length})</h2>
+          {/* Tabs */}
+          <div className="mb-8">
+            <div className="flex space-x-4 border-b border-navy-600">
               <button
-                onClick={handleAddChallenge}
-                className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
+                onClick={() => setActiveTab('users')}
+                className={`py-2 px-4 text-sm font-medium transition-colors ${
+                  activeTab === 'users'
+                    ? 'text-blue-400 border-b-2 border-blue-400'
+                    : 'text-navy-100 hover:text-white'
+                }`}
               >
-                Add New Challenge
+                Users
+              </button>
+              <button
+                onClick={() => setActiveTab('challenges')}
+                className={`py-2 px-4 text-sm font-medium transition-colors ${
+                  activeTab === 'challenges'
+                    ? 'text-blue-400 border-b-2 border-blue-400'
+                    : 'text-navy-100 hover:text-white'
+                }`}
+              >
+                Challenges
+              </button>
+              <button
+                onClick={() => setActiveTab('forum')}
+                className={`py-2 px-4 text-sm font-medium transition-colors ${
+                  activeTab === 'forum'
+                    ? 'text-blue-400 border-b-2 border-blue-400'
+                    : 'text-navy-100 hover:text-white'
+                }`}
+              >
+                Forum Posts
               </button>
             </div>
-            <div className="bg-white shadow rounded-lg overflow-hidden">
-              <table className="min-w-full">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Title</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Difficulty</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Category</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {challenges.map(challenge => (
-                    <tr key={challenge._id}>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                        {challenge.title}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {challenge.difficulty}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {challenge.category}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                          challenge.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                        }`}>
-                          {challenge.isActive ? 'Active' : 'Inactive'}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="flex space-x-2">
+          </div>
+
+          {/* Users Tab */}
+          {activeTab === 'users' && (
+            <section>
+              <h2 className="text-xl font-semibold text-white mb-4">Users ({users.length})</h2>
+              <div className="bg-navy-800/50 rounded-lg border border-navy-600/50 overflow-hidden">
+                <table className="min-w-full divide-y divide-navy-600/50">
+                  <thead className="bg-navy-700/50">
+                    <tr>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-navy-200 uppercase tracking-wider">Name</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-navy-200 uppercase tracking-wider">Email</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-navy-200 uppercase tracking-wider">Level</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-navy-200 uppercase tracking-wider">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-navy-600/50">
+                    {users.map(user => (
+                      <tr key={user._id}>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="flex items-center">
+                            <div className="text-2xl mr-2">{user.currentBadge?.image || '🎯'}</div>
+                            <div className="text-sm font-medium text-white">{user.name}</div>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-navy-200">{user.email}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-navy-200">{user.level || 1}</td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                            user.isAdmin 
+                              ? 'bg-green-500/20 text-green-400'
+                              : 'bg-navy-600/50 text-navy-200'
+                          }`}>
+                            {user.isAdmin ? 'Admin' : 'User'}
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </section>
+          )}
+
+          {/* Challenges Tab */}
+          {activeTab === 'challenges' && (
+            <section>
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-xl font-semibold text-white">Challenges ({challenges.length})</h2>
+                <button
+                  onClick={handleAddChallenge}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                >
+                  Add New Challenge
+                </button>
+              </div>
+              <div className="bg-navy-800/50 rounded-lg border border-navy-600/50 overflow-hidden">
+                <table className="min-w-full divide-y divide-navy-600/50">
+                  <thead className="bg-navy-700/50">
+                    <tr>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-navy-200 uppercase tracking-wider">Title</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-navy-200 uppercase tracking-wider">Difficulty</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-navy-200 uppercase tracking-wider">Points</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-navy-200 uppercase tracking-wider">Status</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-navy-200 uppercase tracking-wider">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-navy-600/50">
+                    {challenges.map(challenge => (
+                      <tr key={challenge._id}>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-white">
+                          {challenge.title}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <span className={`px-2 py-1 text-xs rounded-full ${
+                            challenge.difficulty === 'easy'
+                              ? 'bg-green-500/20 text-green-400'
+                              : challenge.difficulty === 'medium'
+                              ? 'bg-yellow-500/20 text-yellow-400'
+                              : 'bg-red-500/20 text-red-400'
+                          }`}>
+                            {challenge.difficulty}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-navy-200">
+                          {challenge.points} XP
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                            challenge.isActive
+                              ? 'bg-green-500/20 text-green-400'
+                              : 'bg-red-500/20 text-red-400'
+                          }`}>
+                            {challenge.isActive ? 'Active' : 'Inactive'}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm">
+                          <div className="flex space-x-3">
+                            <button
+                              onClick={() => handleEditChallenge(challenge._id)}
+                              className="text-blue-400 hover:text-blue-300 transition-colors"
+                            >
+                              Edit
+                            </button>
+                            <button
+                              onClick={() => handleDeleteChallenge(challenge._id)}
+                              className="text-red-400 hover:text-red-300 transition-colors"
+                            >
+                              Delete
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </section>
+          )}
+
+          {/* Forum Posts Tab */}
+          {activeTab === 'forum' && (
+            <section>
+              <h2 className="text-xl font-semibold text-white mb-4">Forum Posts ({forumPosts.length})</h2>
+              <div className="bg-navy-800/50 rounded-lg border border-navy-600/50 overflow-hidden">
+                <table className="min-w-full divide-y divide-navy-600/50">
+                  <thead className="bg-navy-700/50">
+                    <tr>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-navy-200 uppercase tracking-wider">Title</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-navy-200 uppercase tracking-wider">Content</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-navy-200 uppercase tracking-wider">Author</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-navy-200 uppercase tracking-wider">Date</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-navy-200 uppercase tracking-wider">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-navy-600/50">
+                    {forumPosts.map(post => (
+                      <tr key={post._id}>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-white">
+                          {post.title}
+                        </td>
+                        <td className="px-6 py-4 text-sm text-navy-200 max-w-xs truncate">
+                          {post.content}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-navy-200">
+                          {post.author?.name || 'Anonymous'}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-navy-200">
+                          {new Date(post.createdAt).toLocaleDateString()}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm">
                           <button
-                            onClick={() => handleEditChallenge(challenge._id)}
-                            className="text-indigo-600 hover:text-indigo-900"
-                          >
-                            Edit
-                          </button>
-                          <button
-                            onClick={() => handleDeleteChallenge(challenge._id)}
-                            className="text-red-600 hover:text-red-900"
+                            onClick={() => handleDeleteForumPost(post._id)}
+                            className="text-red-400 hover:text-red-300 transition-colors"
                           >
                             Delete
                           </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </section>
-        )}
-
-        {activeTab === 'forum' && (
-          <section>
-            <h2 className="text-2xl font-semibold mb-4">Forum Posts ({forumPosts.length})</h2>
-            <div className="bg-white shadow rounded-lg overflow-hidden">
-              <table className="min-w-full">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Title</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Content</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Author</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {forumPosts.map(post => (
-                    <tr key={post._id}>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                        {post.title}
-                      </td>
-                      <td className="px-6 py-4 text-sm text-gray-500 max-w-xs truncate">
-                        {post.content}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {post.user?.name || 'Unknown'}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {new Date(post.createdAt).toLocaleDateString()}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <button
-                          onClick={() => handleDeleteForumPost(post._id)}
-                          className="text-red-600 hover:text-red-900"
-                        >
-                          Delete
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </section>
-        )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </section>
+          )}
+        </div>
       </div>
     </Layout>
   );
