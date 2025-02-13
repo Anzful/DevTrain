@@ -28,12 +28,6 @@ export default function Challenges() {
               <h1 className="text-3xl font-bold text-white">
                 Coding Challenges
               </h1>
-              <Link
-                href="/challenges/new"
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-              >
-                Create Challenge
-              </Link>
             </div>
             <p className="text-navy-100 mt-2">
               Enhance your coding skills with our programming challenges
