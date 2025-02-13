@@ -1,4 +1,4 @@
-// frontend/components/Navbar.js
+/* // frontend/components/Navbar.js
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
@@ -32,7 +32,7 @@ export default function Navbar() {
   const handleLogout = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('userId');
-    router.push('/login');
+    router.push('/signin');
   };
 
   return (
@@ -118,10 +118,10 @@ export default function Navbar() {
               </>
             ) : (
               <Link 
-                href="/login" 
+                href="/signin"
                 className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors"
               >
-                Login
+                Sign In
               </Link>
             )}
           </div>
@@ -130,3 +130,4 @@ export default function Navbar() {
     </nav>
   );
 }
+ */

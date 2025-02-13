@@ -1,8 +1,8 @@
-// frontend/pages/login.js
 import { useState } from 'react';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
 import { toast } from 'react-hot-toast';
+import Head from 'next/head';
 
 export default function Login() {
   const router = useRouter();
@@ -22,7 +22,6 @@ export default function Login() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    // Validate form
     if (!formData.email || !formData.password) {
       toast.error('Please fill in all fields');
       return;
@@ -49,7 +48,6 @@ export default function Login() {
         throw new Error(data.message || 'Login failed');
       }
 
-      // Store token and user data
       localStorage.setItem('token', data.token);
       localStorage.setItem('userId', data.user.id);
       
@@ -64,65 +62,78 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8">
-        <div>
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-            Sign in to your account
-          </h2>
-        </div>
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-          <div className="rounded-md shadow-sm -space-y-px">
-            <div>
-              <label htmlFor="email" className="sr-only">Email address</label>
-              <input
-                id="email"
-                name="email"
-                type="email"
-                required
-                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
-                placeholder="Email address"
-                value={formData.email}
-                onChange={handleChange}
-                disabled={isLoading}
-              />
-            </div>
-            <div>
-              <label htmlFor="password" className="sr-only">Password</label>
-              <input
-                id="password"
-                name="password"
-                type="password"
-                required
-                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
-                placeholder="Password"
-                value={formData.password}
-                onChange={handleChange}
-                disabled={isLoading}
-                minLength={6}
-              />
-            </div>
+    <>
+      <Head>
+        <title>Sign In - CodeCraft</title>
+      </Head>
+      <div className="min-h-screen flex items-center justify-center bg-navy-900 py-12 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-md w-full space-y-8">
+          <div className="text-center">
+            <h2 className="mt-6 text-3xl font-extrabold text-white">
+              Sign in to your account
+            </h2>
+            <p className="mt-2 text-sm text-gray-300">
+              Or{' '}
+              <Link href="/register" className="font-medium text-blue-400 hover:text-blue-300">
+                create a new account
+              </Link>
+            </p>
           </div>
-
-          <div>
-            <button
-              type="submit"
-              className={`group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 ${
-                isLoading ? 'opacity-50 cursor-not-allowed' : ''
-              }`}
-              disabled={isLoading}
-            >
-              {isLoading ? 'Signing in...' : 'Sign in'}
-            </button>
+          <div className="bg-navy-800 p-8 shadow-lg rounded-lg">
+            <form className="space-y-6" onSubmit={handleSubmit}>
+              <div>
+                <label htmlFor="email" className="block text-sm font-medium text-gray-200">
+                  Email address
+                </label>
+                <div className="mt-1">
+                  <input
+                    id="email"
+                    name="email"
+                    type="email"
+                    autoComplete="email"
+                    required
+                    value={formData.email}
+                    onChange={handleChange}
+                    disabled={isLoading}
+                    className="appearance-none block w-full px-3 py-2 border border-navy-700 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 bg-navy-700 text-white sm:text-sm"
+                    placeholder="Email address"
+                  />
+                </div>
+              </div>
+              <div>
+                <label htmlFor="password" className="block text-sm font-medium text-gray-200">
+                  Password
+                </label>
+                <div className="mt-1">
+                  <input
+                    id="password"
+                    name="password"
+                    type="password"
+                    autoComplete="current-password"
+                    required
+                    value={formData.password}
+                    onChange={handleChange}
+                    disabled={isLoading}
+                    className="appearance-none block w-full px-3 py-2 border border-navy-700 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 bg-navy-700 text-white sm:text-sm"
+                    placeholder="Password"
+                  />
+                </div>
+              </div>
+              <div>
+                <button
+                  type="submit"
+                  disabled={isLoading}
+                  className={`group relative w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200 ${
+                    isLoading ? 'opacity-50 cursor-not-allowed' : ''
+                  }`}
+                >
+                  {isLoading ? 'Signing in...' : 'Sign in'}
+                </button>
+              </div>
+            </form>
           </div>
-        </form>
-
-        <div className="text-center">
-          <Link href="/register" className="text-indigo-600 hover:text-indigo-500">
-            Don't have an account? Register
-          </Link>
         </div>
       </div>
-    </div>
+    </>
   );
 }

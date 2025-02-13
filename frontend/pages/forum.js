@@ -112,7 +112,7 @@ export default function Forum() {
               <div key={post._id} className="bg-navy-800/50 rounded-lg p-6 border border-navy-600/50">
                 <h2 className="text-xl font-semibold text-white mb-2">{post.title}</h2>
                 <div className="flex items-center space-x-2 text-navy-200 text-sm mb-4">
-                  <span>{post.author?.name || 'Anonymous'}</span>
+                  <span>{post.user?.name}</span>
                   <span>•</span>
                   <span>{new Date(post.createdAt).toLocaleDateString()}</span>
                 </div>

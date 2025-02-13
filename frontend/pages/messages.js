@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+/* import { useState, useEffect } from 'react';
 import Layout from '../components/Layout';
 import { toast } from 'react-hot-toast';
 import ChatWindow from '../components/ChatWindow';
@@ -163,4 +163,4 @@ export default function Messages() {
       </div>
     </Layout>
   );
-} 
+}  */

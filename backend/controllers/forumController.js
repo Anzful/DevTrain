@@ -3,7 +3,9 @@ const ForumPost = require('../models/ForumPost');
 
 exports.getAllPosts = async (req, res) => {
   try {
-    const posts = await ForumPost.find({}).populate('user');
+    const posts = await ForumPost.find({})
+      .populate('user', 'name')  // Populate just the name from user
+      .sort({ createdAt: -1 });
     res.json(posts);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -13,11 +15,13 @@ exports.getAllPosts = async (req, res) => {
 exports.createPost = async (req, res) => {
   try {
     const post = new ForumPost({
-      user: req.user.id,
+      user: req.user.id,  // This comes from auth middleware
       title: req.body.title,
       content: req.body.content
     });
+
     await post.save();
+    await post.populate('user', 'name');  // Populate user data before sending response
     res.status(201).json(post);
   } catch (err) {
     res.status(500).json({ error: err.message });

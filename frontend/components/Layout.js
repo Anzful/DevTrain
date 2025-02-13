@@ -1,4 +1,3 @@
-// frontend/components/Layout.js
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
@@ -17,19 +16,12 @@ export default function Layout({ children }) {
           setLoading(false);
           return;
         }
-
         const response = await fetch('http://localhost:5000/api/users/stats', {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
+          headers: { 'Authorization': `Bearer ${token}` },
         });
-
-        if (!response.ok) {
-          throw new Error('Failed to fetch user data');
-        }
-
+        if (!response.ok) throw new Error('Failed to fetch user data');
         const userData = await response.json();
-        console.log('User data:', userData); // Debug log
+        console.log('User data:', userData);
         setUser(userData);
       } catch (error) {
         console.error('Error fetching user data:', error);
@@ -49,46 +41,76 @@ export default function Layout({ children }) {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100">
-      <nav className="bg-white shadow-lg">
+    <div className="min-h-screen bg-navy-900">
+      <nav className="bg-navy-800 shadow-lg">
         <div className="max-w-6xl mx-auto px-4">
           <div className="flex justify-between items-center h-16">
             <div className="flex space-x-7">
               <Link href="/dashboard" className="flex items-center py-4 px-2">
-                <span className="font-semibold text-gray-500 text-lg">CodeCraft</span>
+                <span className="font-bold text-white text-2xl">CodeCraft</span>
               </Link>
             </div>
 
             <div className="flex space-x-4">
-              <Link href="/dashboard" className={`py-2 px-3 rounded ${
-                router.pathname === '/dashboard' ? 'bg-indigo-600 text-white' : 'text-gray-500 hover:text-indigo-600'
-              }`}>
+              <Link
+                href="/dashboard"
+                className={`py-2 px-3 rounded ${
+                  router.pathname === '/dashboard'
+                    ? 'bg-blue-600 text-white'
+                    : 'text-navy-100 hover:text-white'
+                }`}
+              >
                 Dashboard
               </Link>
-              <Link href="/challenges" className={`py-2 px-3 rounded ${
-                router.pathname === '/challenges' ? 'bg-indigo-600 text-white' : 'text-gray-500 hover:text-indigo-600'
-              }`}>
+              <Link
+                href="/challenges"
+                className={`py-2 px-3 rounded ${
+                  router.pathname === '/challenges'
+                    ? 'bg-blue-600 text-white'
+                    : 'text-navy-100 hover:text-white'
+                }`}
+              >
                 Challenges
               </Link>
-              <Link href="/forum" className={`py-2 px-3 rounded ${
-                router.pathname === '/forum' ? 'bg-indigo-600 text-white' : 'text-gray-500 hover:text-indigo-600'
-              }`}>
+              <Link
+                href="/forum"
+                className={`py-2 px-3 rounded ${
+                  router.pathname === '/forum'
+                    ? 'bg-blue-600 text-white'
+                    : 'text-navy-100 hover:text-white'
+                }`}
+              >
                 Forum
               </Link>
-              <Link href="/leaderboards" className={`py-2 px-3 rounded ${
-                router.pathname === '/leaderboards' ? 'bg-indigo-600 text-white' : 'text-gray-500 hover:text-indigo-600'
-              }`}>
+              <Link
+                href="/leaderboards"
+                className={`py-2 px-3 rounded ${
+                  router.pathname === '/leaderboards'
+                    ? 'bg-blue-600 text-white'
+                    : 'text-navy-100 hover:text-white'
+                }`}
+              >
                 Leaderboards
               </Link>
-              <Link href="/directmessages" className={`py-2 px-3 rounded ${
-                router.pathname === '/directmessages' ? 'bg-indigo-600 text-white' : 'text-gray-500 hover:text-indigo-600'
-              }`}>
+              <Link
+                href="/directmessages"
+                className={`py-2 px-3 rounded ${
+                  router.pathname === '/directmessages'
+                    ? 'bg-blue-600 text-white'
+                    : 'text-navy-100 hover:text-white'
+                }`}
+              >
                 Messages
               </Link>
-              {user?.isAdmin === true && (
-                <Link href="/admin" className={`py-2 px-3 rounded ${
-                  router.pathname === '/admin' ? 'bg-indigo-600 text-white' : 'text-gray-500 hover:text-indigo-600'
-                }`}>
+              {user?.isAdmin && (
+                <Link
+                  href="/admin"
+                  className={`py-2 px-3 rounded ${
+                    router.pathname === '/admin'
+                      ? 'bg-blue-600 text-white'
+                      : 'text-navy-100 hover:text-white'
+                  }`}
+                >
                   Admin
                 </Link>
               )}
@@ -99,21 +121,24 @@ export default function Layout({ children }) {
                 {user ? (
                   <>
                     <div className="flex items-center space-x-2">
-                      <span className="text-2xl">{user.currentBadge?.image || '🔰'}</span>
+                      <span className="text-3xl">{user.currentBadge?.image || '🔰'}</span>
                       <div className="text-sm">
-                        <p className="font-semibold text-gray-700">{user.name}</p>
-                        <p className="text-gray-500">Level {user.level || 1}</p>
+                        <p className="font-semibold text-white">{user.name}</p>
+                        <p className="text-navy-200">Level {user.level || 1}</p>
                       </div>
                     </div>
                     <button
                       onClick={handleLogout}
-                      className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition-colors"
+                      className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 transition-colors"
                     >
                       Logout
                     </button>
                   </>
                 ) : (
-                  <Link href="/login" className="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700 transition-colors">
+                  <Link
+                    href="/login"
+                    className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition-colors"
+                  >
                     Login
                   </Link>
                 )}
@@ -123,9 +148,13 @@ export default function Layout({ children }) {
         </div>
       </nav>
 
-      <main className="py-4">
-        {children}
-      </main>
+      <main className="py-6">{children}</main>
+
+      <footer className="bg-navy-800 text-navy-200 text-center py-4">
+        <p className="text-sm">
+          &copy; {new Date().getFullYear()} CodeCraft. All rights reserved.
+        </p>
+      </footer>
     </div>
   );
 }
