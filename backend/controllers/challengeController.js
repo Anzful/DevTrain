@@ -1,5 +1,7 @@
 // backend/controllers/challengeController.js
 const Challenge = require('../models/Challenge');
+const Submission = require('../models/Submission');
+const mongoose = require('mongoose');
 
 exports.getChallenges = async (req, res) => {
   try {
@@ -15,9 +17,29 @@ exports.getChallenges = async (req, res) => {
       
       return {
         ...challenge,
-        points: difficultyPoints[challenge.difficulty] || 0
+        points: difficultyPoints[challenge.difficulty] || 0,
+        completed: false // Default to not completed
       };
     });
+    
+    // If user is authenticated, check which challenges they've completed
+    if (req.user && req.user.id) {
+      // Find all successful submissions by this user
+      const successfulSubmissions = await Submission.find({
+        user: mongoose.Types.ObjectId(req.user.id),
+        status: 'success'
+      }).distinct('challenge');
+      
+      console.log(`Found ${successfulSubmissions.length} completed challenges for user ${req.user.id}`);
+      
+      // Convert ObjectIds to strings for easier comparison
+      const completedChallengeIds = successfulSubmissions.map(id => id.toString());
+      
+      // Mark challenges as completed if the user has a successful submission
+      challengesWithPoints.forEach(challenge => {
+        challenge.completed = completedChallengeIds.includes(challenge._id.toString());
+      });
+    }
     
     res.json(challengesWithPoints);
   } catch (error) {
@@ -41,6 +63,20 @@ exports.getChallenge = async (req, res) => {
     };
     
     challenge.points = difficultyPoints[challenge.difficulty] || 0;
+    
+    // Default completion status
+    challenge.completed = false;
+    
+    // If user is authenticated, check if they've completed this challenge
+    if (req.user && req.user.id) {
+      const successfulSubmission = await Submission.findOne({
+        user: mongoose.Types.ObjectId(req.user.id),
+        challenge: mongoose.Types.ObjectId(challenge._id),
+        status: 'success'
+      });
+      
+      challenge.completed = !!successfulSubmission;
+    }
     
     res.json(challenge);
   } catch (error) {

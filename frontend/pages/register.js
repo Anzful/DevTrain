@@ -54,15 +54,15 @@ export default function Register() {
       <Head>
         <title>Register - CodeCraft</title>
       </Head>
-      <div className="min-h-screen flex items-center justify-center bg-navy-900 py-12 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-md w-full space-y-8">
+      <div className="min-h-screen flex items-center justify-center bg-navy-900 py-8 sm:py-12 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-md w-full space-y-6 sm:space-y-8">
           <div className="text-center">
-            <h2 className="mt-6 text-3xl font-extrabold text-white">
+            <h2 className="mt-4 sm:mt-6 text-2xl sm:text-3xl font-extrabold text-white">
               Create your account
             </h2>
           </div>
-          <div className="bg-navy-800 p-8 shadow-lg rounded-lg">
-            <form className="space-y-6" onSubmit={handleSubmit}>
+          <div className="bg-navy-800 p-5 sm:p-8 shadow-lg rounded-lg">
+            <form className="space-y-4 sm:space-y-6" onSubmit={handleSubmit}>
               <div>
                 <label htmlFor="name" className="sr-only">Name</label>
                 <input
@@ -73,7 +73,7 @@ export default function Register() {
                   placeholder="Full Name"
                   value={formData.name}
                   onChange={handleChange}
-                  className="appearance-none block w-full px-3 py-2 border border-navy-700 placeholder-gray-400 text-white rounded-t-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                  className="appearance-none block w-full px-3 py-2 border border-navy-700 placeholder-gray-400 text-white rounded-t-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-xs sm:text-sm"
                 />
               </div>
               <div>
@@ -86,7 +86,7 @@ export default function Register() {
                   placeholder="Email address"
                   value={formData.email}
                   onChange={handleChange}
-                  className="appearance-none block w-full px-3 py-2 border border-navy-700 placeholder-gray-400 text-white focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                  className="appearance-none block w-full px-3 py-2 border border-navy-700 placeholder-gray-400 text-white focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-xs sm:text-sm"
                 />
               </div>
               <div>
@@ -99,13 +99,13 @@ export default function Register() {
                   placeholder="Password"
                   value={formData.password}
                   onChange={handleChange}
-                  className="appearance-none block w-full px-3 py-2 border border-navy-700 placeholder-gray-400 text-white rounded-b-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                  className="appearance-none block w-full px-3 py-2 border border-navy-700 placeholder-gray-400 text-white rounded-b-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-xs sm:text-sm"
                 />
               </div>
-              <div>
+              <div className="pt-2">
                 <button
                   type="submit"
-                  className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200"
+                  className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-xs sm:text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200"
                 >
                   Register
                 </button>
@@ -113,7 +113,7 @@ export default function Register() {
             </form>
           </div>
           <div className="text-center">
-            <Link href="/login" className="text-blue-400 hover:text-blue-300">
+            <Link href="/login" className="text-xs sm:text-sm text-blue-400 hover:text-blue-300">
               Already have an account? Login
             </Link>
           </div>
