@@ -24,22 +24,26 @@ const handleSubmit = async () => {
     }
 
     if (data.success) {
-      if (data.userUpdates) {
-        const { experiencePointsEarned, newLevel, oldLevel } = data.userUpdates;
-        
-        toast.success(`Challenge completed! Earned ${experiencePointsEarned} XP`);
-        
-        if (newLevel > oldLevel) {
-          toast.success(`Level Up! You are now level ${newLevel}`);
-        }
+      if (data.submission.passed) {
+        if (data.userUpdates) {
+          const { experiencePointsEarned, newLevel, oldLevel } = data.userUpdates;
+          
+          toast.success(`Challenge completed! Earned ${experiencePointsEarned} XP`);
+          
+          if (newLevel > oldLevel) {
+            toast.success(`Level Up! You are now level ${newLevel}`);
+          }
 
-        if (typeof onSuccess === 'function') {
-          onSuccess(data.userUpdates);
+          if (typeof onSuccess === 'function') {
+            onSuccess(data.userUpdates);
+          }
+        } else if (data.error) {
+          console.warn('Submission successful but stats update failed:', data.error);
+          toast.success('Challenge completed!');
+          toast.warning('Failed to update stats. Please refresh the page.');
         }
-      } else if (data.error) {
-        console.warn('Submission successful but stats update failed:', data.error);
-        toast.success('Challenge completed!');
-        toast.warning('Failed to update stats. Please refresh the page.');
+      } else {
+        toast.error('Challenge failed. Try again!');
       }
     } else {
       toast.error(data.message || 'Failed to submit solution');

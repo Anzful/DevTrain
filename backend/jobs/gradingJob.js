@@ -27,7 +27,7 @@ const worker = new Worker('gradingQueue', async job => {
     
     // Get AI feedback from OpenAI
     const feedback = await getCodeFeedback(submission.code);
-    submission.status = passedAll ? 'passed' : 'failed';
+    submission.status = passedAll ? 'success' : 'failed';
     submission.feedback = feedback;
     await submission.save();
   }

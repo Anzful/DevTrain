@@ -1,5 +1,6 @@
 const { User } = require('../models/User');
 const Submission = require('../models/Submission');
+const mongoose = require('mongoose');
 
 // Get all users
 exports.getUsers = async (req, res) => {
@@ -38,7 +39,7 @@ exports.getUserStats = async (req, res) => {
 
     // Get submission stats
     const submissionStats = await Submission.aggregate([
-      { $match: { userId: user._id } },
+      { $match: { user: mongoose.Types.ObjectId(userId) } },
       {
         $group: {
           _id: null,
@@ -52,10 +53,10 @@ exports.getUserStats = async (req, res) => {
     ]);
 
     // Get recent activity
-    const recentActivity = await Submission.find({ userId: user._id })
+    const recentActivity = await Submission.find({ user: userId })
       .sort({ createdAt: -1 })
       .limit(5)
-      .populate('challengeId', 'title difficulty');
+      .populate('challenge', 'title difficulty');
 
     // Calculate level progress
     const currentLevel = Math.floor(1 + Math.sqrt(user.experiencePoints/100));
@@ -71,24 +72,22 @@ exports.getUserStats = async (req, res) => {
       experiencePoints: user.experiencePoints,
       currentBadge: user.currentBadge,
       isAdmin: user.isAdmin || false,
-      levelProgress: {
-        currentLevel,
-        currentLevelXP,
-        nextLevelXP,
-        progress: Math.min(100, Math.max(0, progress))
-      },
-      submissions: {
-        total: submissionStats[0]?.totalSubmissions || 0,
-        successful: submissionStats[0]?.successfulSubmissions || 0,
-        averageScore: Math.round((submissionStats[0]?.averageScore || 0) * 100) / 100
-      },
-      recentActivity: recentActivity.map(activity => ({
+      levelProgress: Math.min(100, Math.max(0, progress)),
+      totalSubmissions: submissionStats[0]?.totalSubmissions || 0,
+      successfulSubmissions: submissionStats[0]?.successfulSubmissions || 0,
+      successRate: submissionStats[0]?.totalSubmissions > 0 
+        ? Math.round((submissionStats[0]?.successfulSubmissions / submissionStats[0]?.totalSubmissions) * 100) 
+        : 0,
+      recentSubmissions: recentActivity.map(activity => ({
         id: activity._id,
-        challengeTitle: activity.challengeId?.title || 'Unknown Challenge',
-        difficulty: activity.challengeId?.difficulty || 'unknown',
+        challengeTitle: activity.challenge?.title || 'Unknown Challenge',
+        difficulty: activity.challenge?.difficulty || 'unknown',
         status: activity.status,
-        score: activity.score,
-        date: activity.createdAt
+        passed: activity.passed,
+        points: activity.challenge?.difficulty === 'easy' ? 10 : 
+                activity.challenge?.difficulty === 'medium' ? 20 : 30,
+        language: activity.language,
+        createdAt: activity.createdAt
       })),
       lastActive: user.lastActive || user.updatedAt
     };

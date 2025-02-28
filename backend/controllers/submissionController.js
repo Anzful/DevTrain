@@ -94,7 +94,7 @@ exports.submitSolution = async (req, res) => {
 
     // Update submission status
     submission.passed = overallPass;
-    submission.status = overallPass ? 'passed' : 'failed';
+    submission.status = overallPass ? 'success' : 'failed';
     
     console.log('Saving submission:', {
       id: submission._id,

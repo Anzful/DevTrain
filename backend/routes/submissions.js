@@ -124,7 +124,7 @@ router.post('/', verifyToken, async (req, res) => {
       challenge: challengeId,
       code,
       language: normalizedLanguage,
-      status: overallPass ? 'passed' : 'failed',
+      status: overallPass ? 'success' : 'failed',
       feedback: JSON.stringify(testResults, null, 2)
     });
 
