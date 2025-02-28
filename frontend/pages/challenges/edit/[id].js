@@ -7,6 +7,7 @@ export default function EditChallenge() {
   const router = useRouter();
   const { id } = router.query;
   const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
   const [categories, setCategories] = useState([]);
   const [challenge, setChallenge] = useState({
     title: '',
@@ -29,10 +30,14 @@ export default function EditChallenge() {
 
   const fetchCategories = async () => {
     try {
+      console.log('Fetching categories...');
       const response = await fetch('http://localhost:5000/api/challenges/categories');
       if (response.ok) {
         const data = await response.json();
+        console.log('Categories fetched:', data);
         setCategories(data);
+      } else {
+        console.error('Failed to fetch categories:', response.status);
       }
     } catch (error) {
       console.error('Error fetching categories:', error);

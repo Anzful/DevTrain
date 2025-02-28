@@ -23,10 +23,14 @@ export default function NewChallenge() {
   useEffect(() => {
     const fetchCategories = async () => {
       try {
+        console.log('Fetching categories for new challenge...');
         const response = await fetch('http://localhost:5000/api/challenges/categories');
         if (response.ok) {
           const data = await response.json();
+          console.log('Categories fetched:', data);
           setCategories(data);
+        } else {
+          console.error('Failed to fetch categories:', response.status);
         }
       } catch (error) {
         console.error('Error fetching categories:', error);

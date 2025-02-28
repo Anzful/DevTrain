@@ -58,6 +58,33 @@ exports.getUserStats = async (req, res) => {
       .limit(5)
       .populate('challenge', 'title difficulty');
 
+    // Get activity data for GitHub-style chart (last 365 days)
+    const oneYearAgo = new Date();
+    oneYearAgo.setDate(oneYearAgo.getDate() - 365);
+    
+    const activityData = await Submission.aggregate([
+      { 
+        $match: { 
+          user: mongoose.Types.ObjectId(userId),
+          createdAt: { $gte: oneYearAgo }
+        } 
+      },
+      {
+        $group: {
+          _id: { 
+            $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } 
+          },
+          count: { $sum: 1 },
+          successCount: {
+            $sum: { $cond: [{ $eq: ['$status', 'success'] }, 1, 0] }
+          }
+        }
+      },
+      { $sort: { _id: 1 } }
+    ]);
+
+    console.log(`Found ${activityData.length} days with activity for user ${userId}`);
+
     // Calculate level progress
     const currentLevel = Math.floor(1 + Math.sqrt(user.experiencePoints/100));
     const currentLevelXP = Math.pow((currentLevel - 1), 2) * 100;
@@ -88,6 +115,11 @@ exports.getUserStats = async (req, res) => {
                 activity.challenge?.difficulty === 'medium' ? 20 : 30,
         language: activity.language,
         createdAt: activity.createdAt
+      })),
+      activityData: activityData.map(day => ({
+        date: day._id,
+        count: day.count,
+        successCount: day.successCount
       })),
       lastActive: user.lastActive || user.updatedAt
     };

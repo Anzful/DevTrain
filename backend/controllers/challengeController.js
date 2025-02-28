@@ -149,10 +149,36 @@ exports.deleteChallenge = async (req, res) => {
 // Get all available categories
 exports.getCategories = async (req, res) => {
   try {
+    console.log('Fetching categories from database...');
+    // Get categories from database
     const categories = await Challenge.distinct('category');
-    res.json(categories);
+    console.log('Categories from database:', categories);
+    
+    // Default categories from the Challenge model
+    const defaultCategories = [
+      'algorithms', 'data-structures', 'arrays', 'strings', 'sorting', 
+      'searching', 'dynamic-programming', 'recursion', 'linked-lists', 
+      'trees', 'graphs', 'hash-tables', 'web-development', 
+      'databases', 'machine-learning', 'other'
+    ];
+    
+    // Always include default categories
+    let result = [...new Set([...defaultCategories, ...categories])];
+    
+    console.log('Categories returned:', result);
+    res.json(result);
   } catch (error) {
     console.error('Error fetching categories:', error);
-    res.status(500).json({ message: 'Error fetching categories' });
+    
+    // Return default categories on error
+    const defaultCategories = [
+      'algorithms', 'data-structures', 'arrays', 'strings', 'sorting', 
+      'searching', 'dynamic-programming', 'recursion', 'linked-lists', 
+      'trees', 'graphs', 'hash-tables', 'web-development', 
+      'databases', 'machine-learning', 'other'
+    ];
+    
+    console.log('Returning default categories due to error');
+    res.json(defaultCategories);
   }
 };
