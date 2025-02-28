@@ -39,9 +39,37 @@ exports.getLeaderboards = async (req, res) => {
     const submissions = await Submission.aggregate([
       { $match: { status: 'success' } },
       {
+        $lookup: {
+          from: 'challenges',
+          localField: 'challenge',
+          foreignField: '_id',
+          as: 'challengeDetails'
+        }
+      },
+      {
+        $unwind: {
+          path: '$challengeDetails',
+          preserveNullAndEmptyArrays: true
+        }
+      },
+      {
+        $addFields: {
+          points: {
+            $switch: {
+              branches: [
+                { case: { $eq: ['$challengeDetails.difficulty', 'easy'] }, then: 10 },
+                { case: { $eq: ['$challengeDetails.difficulty', 'medium'] }, then: 20 },
+                { case: { $eq: ['$challengeDetails.difficulty', 'hard'] }, then: 30 }
+              ],
+              default: 0
+            }
+          }
+        }
+      },
+      {
         $group: {
-          _id: '$userId',
-          totalScore: { $sum: '$score' },
+          _id: '$user',
+          totalScore: { $sum: '$points' },
           successfulSubmissions: { $sum: 1 }
         }
       },
@@ -49,6 +77,11 @@ exports.getLeaderboards = async (req, res) => {
     ]);
 
     console.log('Found submissions:', submissions.length);
+    
+    // Log submission details for debugging
+    if (submissions.length > 0) {
+      console.log('Sample submission:', JSON.stringify(submissions[0], null, 2));
+    }
 
     // Create user map for quick lookup
     const userMap = users.reduce((map, user) => {
@@ -64,9 +97,11 @@ exports.getLeaderboards = async (req, res) => {
         level: user.level || 1
       })),
       performance: submissions.map(submission => {
-        const user = userMap[submission._id.toString()];
+        // Add null check for submission._id
+        const userId = submission._id ? submission._id.toString() : null;
+        const user = userId ? userMap[userId] : null;
         return {
-          id: submission._id,
+          id: submission._id || 'unknown',
           name: user ? user.name : 'Unknown User',
           score: submission.totalScore || 0,
           submissions: submission.successfulSubmissions || 0
