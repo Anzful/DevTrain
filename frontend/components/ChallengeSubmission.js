@@ -37,7 +37,10 @@ const ChallengeSubmission = ({ challenge, code, onSuccess }) => {
 
       if (data.success) {
         if (data.overallPass) {
-          if (data.userUpdates) {
+          if (data.alreadyCompleted) {
+            // Challenge was already completed previously
+            toast.success('Challenge completed! (Already earned XP previously)');
+          } else if (data.userUpdates) {
             const { experiencePointsEarned, newLevel, oldLevel } = data.userUpdates;
             
             toast.success(`Challenge completed! Earned ${experiencePointsEarned} XP`);
