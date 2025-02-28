@@ -5,7 +5,20 @@ const mongoose = require('mongoose');
 
 exports.getChallenges = async (req, res) => {
   try {
-    const challenges = await Challenge.find().lean();
+    // Build query based on filters
+    const query = {};
+    
+    // Filter by category if provided
+    if (req.query.category && req.query.category !== 'all') {
+      query.category = req.query.category;
+    }
+    
+    // Filter by difficulty if provided
+    if (req.query.difficulty && req.query.difficulty !== 'all') {
+      query.difficulty = req.query.difficulty;
+    }
+    
+    const challenges = await Challenge.find(query).lean();
     
     // Add points based on difficulty for each challenge
     const challengesWithPoints = challenges.map(challenge => {
@@ -130,5 +143,16 @@ exports.deleteChallenge = async (req, res) => {
   } catch (error) {
     console.error('Error deleting challenge:', error);
     res.status(500).json({ message: 'Error deleting challenge' });
+  }
+};
+
+// Get all available categories
+exports.getCategories = async (req, res) => {
+  try {
+    const categories = await Challenge.distinct('category');
+    res.json(categories);
+  } catch (error) {
+    console.error('Error fetching categories:', error);
+    res.status(500).json({ message: 'Error fetching categories' });
   }
 };

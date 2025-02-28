@@ -15,10 +15,15 @@ const challengeSchema = new mongoose.Schema({
     enum: ['easy', 'medium', 'hard'],
     required: true
   },
+  category: {
+    type: String,
+    enum: ['algorithms', 'data-structures', 'arrays', 'strings', 'sorting', 'searching', 'dynamic-programming', 'recursion', 'linked-lists', 'trees', 'graphs', 'hash-tables', 'web-development', 'databases', 'machine-learning', 'other'],
+    default: 'other'
+  },
   language: {
     type: String,
     enum: ['python', 'javascript'],
-    required: true
+    default: 'python'
   },
   testCases: [{
     input: String,

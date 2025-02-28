@@ -5,10 +5,11 @@ import Layout from '../../components/Layout';
 import { useState, useEffect } from 'react';
 import dynamic from 'next/dynamic';
 import { toast } from 'react-hot-toast';
-import CodeEditor from '../../components/CodeEditor';
+import ChallengeSubmission from '../../components/ChallengeSubmission';
+import Head from 'next/head';
 
 // Dynamically import CodeEditor so it loads only on the client side
-const CodeEditorComponent = dynamic(() => import('../../components/CodeEditor'), {
+const CodeEditor = dynamic(() => import('../../components/CodeEditor'), {
   ssr: false,
 });
 
@@ -28,6 +29,8 @@ export default function ChallengePage() {
   const [language, setLanguage] = useState('python');
   const [submitting, setSubmitting] = useState(false);
   const [results, setResults] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     if (id) {
@@ -41,10 +44,13 @@ export default function ChallengePage() {
           setChallenge(data);
           // Set initial code template based on language
           setCode(data.template || '');
+          setLoading(false);
         })
         .catch((error) => {
           console.error('Error fetching challenge:', error);
           toast.error('Error loading challenge');
+          setLoading(false);
+          setError('Failed to load challenge data');
         });
     }
   }, [id]);
@@ -52,10 +58,11 @@ export default function ChallengePage() {
   const handleSubmit = async () => {
     try {
       setSubmitting(true);
-      console.log('Submitting code with payload:', {
+      console.log('Running code with payload:', {
         challengeId: challenge._id,
         code,
-        language
+        language,
+        isOfficialSubmission: false // Flag to indicate this is just a test run
       });
 
       const response = await fetch('http://localhost:5000/api/submissions', {
@@ -67,12 +74,13 @@ export default function ChallengePage() {
         body: JSON.stringify({
           challengeId: challenge._id,
           code,
-          language
+          language,
+          isOfficialSubmission: false // Not an official submission
         }),
       });
 
       const data = await response.json();
-      console.log('Submission result:', data);
+      console.log('Run result:', data);
 
       if (data.success) {
         setResults({
@@ -83,34 +91,32 @@ export default function ChallengePage() {
         });
 
         if (data.overallPass) {
-          // Update challenge completion status
-          setChallenge(prevChallenge => ({
-            ...prevChallenge,
-            completed: true
-          }));
-          
-          toast.success(`Challenge completed! You earned ${
-            challenge.difficulty === 'easy' ? 10 :
-            challenge.difficulty === 'medium' ? 20 : 30
-          } XP!`);
-          
-          // Dispatch event to update other components
-          window.dispatchEvent(new CustomEvent('challenge-complete'));
+          toast.success('All tests passed! You can now submit your solution to earn XP.');
         } else {
           toast.error('Some tests failed. Check the results below.');
         }
       } else {
-        toast.error(data.message || 'Error submitting solution');
+        toast.error(data.message || 'Error running solution');
       }
     } catch (error) {
       console.error('Error:', error);
-      toast.error('Error submitting solution');
+      toast.error('Error running solution');
     } finally {
       setSubmitting(false);
     }
   };
 
-  if (!challenge) {
+  const handleSuccess = (userUpdates) => {
+    // Update challenge completion status
+    setChallenge(prev => ({
+      ...prev,
+      completed: true
+    }));
+    
+    toast.success('Challenge completed!');
+  };
+
+  if (loading) {
     return (
       <Layout>
         <div className="min-h-screen bg-gradient-to-b from-navy-900 to-navy-800 flex items-center justify-center">
@@ -120,8 +126,23 @@ export default function ChallengePage() {
     );
   }
 
+  if (error || !challenge) {
+    return (
+      <Layout>
+        <div className="min-h-screen bg-gradient-to-b from-navy-900 to-navy-800 flex items-center justify-center">
+          <div className="text-red-400 bg-red-900/20 px-4 py-2 rounded">
+            {error || 'Failed to load challenge'}
+          </div>
+        </div>
+      </Layout>
+    );
+  }
+
   return (
     <Layout>
+      <Head>
+        <title>{challenge.title} - CodeCraft Challenge</title>
+      </Head>
       <div className="min-h-screen bg-gradient-to-b from-navy-900 to-navy-800 py-4 sm:py-6 md:py-8 px-4">
         <div className="max-w-[1600px] mx-auto">
           {/* Challenge Header */}
@@ -129,12 +150,15 @@ export default function ChallengePage() {
             <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-4">
               <h1 className="text-2xl sm:text-3xl font-bold text-white">{challenge.title}</h1>
               <div className="flex items-center space-x-2 mt-2 sm:mt-0">
-                <span className={`px-2 py-1 sm:px-3 sm:py-1 rounded-full text-xs font-medium
+                <span className={`px-3 py-1 rounded-full text-xs font-medium
                   ${challenge.difficulty === 'easy' ? 'bg-green-500/20 text-green-400' :
                     challenge.difficulty === 'medium' ? 'bg-yellow-500/20 text-yellow-400' :
                     'bg-red-500/20 text-red-400'}`}
                 >
-                  {challenge.difficulty}
+                  {challenge.difficulty.charAt(0).toUpperCase() + challenge.difficulty.slice(1)}
+                </span>
+                <span className="px-3 py-1 rounded-full text-xs font-medium bg-blue-500/20 text-blue-400">
+                  {challenge.category ? challenge.category.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ') : 'Other'}
                 </span>
                 {challenge.completed && (
                   <span className="px-2 py-1 sm:px-3 sm:py-1 rounded-full text-xs font-medium bg-green-500/20 text-green-400 flex items-center">
@@ -252,7 +276,7 @@ export default function ChallengePage() {
                     <span>Running Tests...</span>
                   </div>
                 ) : (
-                  'Submit Solution'
+                  'Run Code'
                 )}
               </button>
             </div>
@@ -326,6 +350,16 @@ export default function ChallengePage() {
               </div>
             </div>
           )}
+
+          {/* Challenge Submission Panel */}
+          <div className="mt-4 sm:mt-6 bg-navy-800/50 rounded-lg p-4 sm:p-6 border border-navy-600/50">
+            <h2 className="text-lg sm:text-xl font-semibold text-white mb-3 sm:mb-4">Submit Your Solution</h2>
+            <ChallengeSubmission
+              challenge={challenge}
+              code={code}
+              onSuccess={handleSuccess}
+            />
+          </div>
         </div>
       </div>
     </Layout>

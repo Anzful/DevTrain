@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import Layout from '../../components/Layout';
 import { toast } from 'react-hot-toast';
@@ -6,10 +6,12 @@ import { toast } from 'react-hot-toast';
 export default function NewChallenge() {
   const router = useRouter();
   const [submitting, setSubmitting] = useState(false);
+  const [categories, setCategories] = useState([]);
   const [challenge, setChallenge] = useState({
     title: '',
     description: '',
     difficulty: 'easy',
+    category: 'algorithms',
     language: 'python',
     testCases: [
       { input: '', expectedOutput: '' },
@@ -17,18 +19,41 @@ export default function NewChallenge() {
     ]
   });
 
+  // Fetch available categories
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const response = await fetch('http://localhost:5000/api/challenges/categories');
+        if (response.ok) {
+          const data = await response.json();
+          setCategories(data);
+        }
+      } catch (error) {
+        console.error('Error fetching categories:', error);
+      }
+    };
+    
+    fetchCategories();
+  }, []);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
       setSubmitting(true);
-      const token = localStorage.getItem('token');
+      
+      // Ensure language is set to a default value
+      const challengeData = {
+        ...challenge,
+        language: 'python' // Default language
+      };
+      
       const response = await fetch('http://localhost:5000/api/challenges', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+          Authorization: `Bearer ${localStorage.getItem('token')}`,
         },
-        body: JSON.stringify(challenge)
+        body: JSON.stringify(challengeData),
       });
 
       if (!response.ok) {
@@ -81,6 +106,19 @@ export default function NewChallenge() {
     }));
   };
 
+  // Default categories if API fails
+  const defaultCategories = [
+    'algorithms',
+    'data-structures',
+    'web-development',
+    'databases',
+    'machine-learning',
+    'other'
+  ];
+
+  // Use fetched categories or default if empty
+  const availableCategories = categories.length > 0 ? categories : defaultCategories;
+
   return (
     <Layout>
       <div className="min-h-screen bg-gradient-to-b from-navy-900 to-navy-800 py-8 px-4">
@@ -112,7 +150,7 @@ export default function NewChallenge() {
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-navy-100 mb-1">Difficulty</label>
                 <select
@@ -128,15 +166,18 @@ export default function NewChallenge() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-navy-100 mb-1">Language</label>
+                <label className="block text-sm font-medium text-navy-100 mb-1">Category</label>
                 <select
-                  name="language"
-                  value={challenge.language}
+                  name="category"
+                  value={challenge.category}
                   onChange={handleChange}
                   className="w-full bg-navy-700 border border-navy-600 text-white rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
-                  <option value="python">Python</option>
-                  <option value="javascript">JavaScript</option>
+                  {availableCategories.map(category => (
+                    <option key={category} value={category}>
+                      {category.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
+                    </option>
+                  ))}
                 </select>
               </div>
             </div>

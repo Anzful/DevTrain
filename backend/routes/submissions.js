@@ -45,6 +45,13 @@ const pollSubmissionResult = async (token) => {
 router.post('/', verifyToken, async (req, res) => {
   try {
     const { challengeId, code, language } = req.body;
+    
+    // Fix the isOfficialSubmission flag handling
+    // Convert the value to a boolean explicitly, handling both string and boolean inputs
+    const isOfficialSubmission = req.body.isOfficialSubmission === true;
+    
+    console.log(`Submission request received: isOfficialSubmission=${isOfficialSubmission}, type=${typeof req.body.isOfficialSubmission}`);
+    
     const userId = req.user.id;
     
     if (!code || !language) {
@@ -121,71 +128,101 @@ router.post('/', verifyToken, async (req, res) => {
     // Determine overall pass/fail: All test cases must pass.
     const overallPass = testResults.every(tr => tr.passed);
 
-    // Create a submission record and store detailed feedback (as JSON)
-    const submission = await Submission.create({
-      user: userId,
-      challenge: challengeId,
-      code,
-      language: normalizedLanguage,
-      passed: overallPass,
-      status: overallPass ? 'success' : 'failed',
-      feedback: JSON.stringify(testResults, null, 2)
-    });
-
-    // If the submission was successful, update the user's XP
+    // Only create a submission record and update user XP if this is an official submission
+    let submission = null;
     let userUpdates = null;
-    if (overallPass) {
-      try {
-        // Get challenge difficulty and calculate XP
-        const difficulty = challenge.difficulty.toLowerCase();
-        const difficultyPoints = {
-          'easy': 10,
-          'medium': 20,
-          'hard': 30
-        };
-        const experiencePoints = difficultyPoints[difficulty] || 0;
 
-        // Find and update user
-        const user = await User.findById(userId);
-        
-        if (user) {
-          // Update user stats
-          const oldXP = user.experiencePoints || 0;
-          const oldLevel = user.level || 1;
+    console.log(`Processing submission: isOfficialSubmission=${isOfficialSubmission}, overallPass=${overallPass}`);
 
-          user.experiencePoints = oldXP + experiencePoints;
-          
-          // Update level and badge
-          const updates = user.updateLevelAndBadge();
-          user.level = updates.level;
-          user.currentBadge = updates.currentBadge;
+    if (isOfficialSubmission) {
+      console.log("Creating official submission record");
+      
+      // Check if the user has already successfully completed this challenge
+      const previousSuccessfulSubmission = await Submission.findOne({
+        user: userId,
+        challenge: challengeId,
+        passed: true
+      });
+      
+      const isFirstSuccessfulSubmission = !previousSuccessfulSubmission && overallPass;
+      console.log(`Is first successful submission: ${isFirstSuccessfulSubmission}`);
+      
+      // Create a submission record and store detailed feedback (as JSON)
+      submission = await Submission.create({
+        user: userId,
+        challenge: challengeId,
+        code,
+        language: normalizedLanguage,
+        passed: overallPass,
+        status: overallPass ? 'success' : 'failed',
+        feedback: JSON.stringify(testResults, null, 2)
+      });
 
-          // Save user changes
-          await user.save();
-
-          userUpdates = {
-            experiencePointsEarned: experiencePoints,
-            oldXP,
-            newTotalXP: user.experiencePoints,
-            oldLevel,
-            newLevel: user.level,
-            newBadge: user.currentBadge
+      // If the submission was successful AND it's the first successful submission, update the user's XP
+      if (isFirstSuccessfulSubmission) {
+        try {
+          console.log("Updating user XP for first successful submission");
+          // Get challenge difficulty and calculate XP
+          const difficulty = challenge.difficulty.toLowerCase();
+          const difficultyPoints = {
+            'easy': 10,
+            'medium': 20,
+            'hard': 30
           };
+          const experiencePoints = difficultyPoints[difficulty] || 0;
+
+          // Find and update user
+          const user = await User.findById(userId);
+          
+          if (user) {
+            // Update user stats
+            const oldXP = user.experiencePoints || 0;
+            const oldLevel = user.level || 1;
+
+            user.experiencePoints = oldXP + experiencePoints;
+            
+            // Update level and badge
+            const updates = user.updateLevelAndBadge();
+            user.level = updates.level;
+            user.currentBadge = updates.currentBadge;
+
+            // Save user changes
+            await user.save();
+
+            userUpdates = {
+              experiencePointsEarned: experiencePoints,
+              oldXP,
+              newTotalXP: user.experiencePoints,
+              oldLevel,
+              newLevel: user.level,
+              newBadge: user.currentBadge
+            };
+          }
+        } catch (error) {
+          console.error('Error updating user XP:', error);
         }
-      } catch (error) {
-        console.error('Error updating user XP:', error);
+      } else if (previousSuccessfulSubmission && overallPass) {
+        console.log("Challenge already completed previously - no XP awarded");
+        userUpdates = {
+          experiencePointsEarned: 0,
+          message: "Challenge already completed"
+        };
       }
+    } else {
+      console.log("Skipping submission record and XP update for test run");
     }
 
     return res.json({
       success: true,
-      submission: {
+      submission: submission ? {
         id: submission._id,
         passed: overallPass
-      },
+      } : null,
       testResults,
       overallPass,
-      userUpdates
+      userUpdates,
+      isOfficialSubmission,
+      alreadyCompleted: userUpdates?.message === "Challenge already completed"
     });
   } catch (error) {
     console.error('Judge0 error:', error.response?.data || error.message);

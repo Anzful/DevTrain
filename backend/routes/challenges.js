@@ -7,7 +7,8 @@ const {
   getChallenge,
   createChallenge,
   updateChallenge,
-  deleteChallenge
+  deleteChallenge,
+  getCategories
 } = require('../controllers/challengeController');
 const jwt = require('jsonwebtoken');
 const { User } = require('../models/User');
@@ -46,6 +47,7 @@ const optionalAuth = async (req, res, next) => {
 
 // Public routes with optional authentication
 router.get('/', optionalAuth, getChallenges);
+router.get('/categories', getCategories);
 router.get('/:id', optionalAuth, getChallenge);
 
 // Protected admin routes
