@@ -83,7 +83,7 @@ exports.getUserStats = async (req, res) => {
         challengeTitle: activity.challenge?.title || 'Unknown Challenge',
         difficulty: activity.challenge?.difficulty || 'unknown',
         status: activity.status,
-        passed: activity.passed,
+        passed: activity.status === 'success',
         points: activity.challenge?.difficulty === 'easy' ? 10 : 
                 activity.challenge?.difficulty === 'medium' ? 20 : 30,
         language: activity.language,

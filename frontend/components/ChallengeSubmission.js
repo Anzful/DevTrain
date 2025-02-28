@@ -24,7 +24,7 @@ const handleSubmit = async () => {
     }
 
     if (data.success) {
-      if (data.submission.passed) {
+      if (data.overallPass) {
         if (data.userUpdates) {
           const { experiencePointsEarned, newLevel, oldLevel } = data.userUpdates;
           
@@ -34,13 +34,29 @@ const handleSubmit = async () => {
             toast.success(`Level Up! You are now level ${newLevel}`);
           }
 
+          // Dispatch event to notify other components
+          window.dispatchEvent(new CustomEvent('challenge-complete', {
+            detail: data.userUpdates
+          }));
+
           if (typeof onSuccess === 'function') {
             onSuccess(data.userUpdates);
           }
-        } else if (data.error) {
-          console.warn('Submission successful but stats update failed:', data.error);
-          toast.success('Challenge completed!');
+        } else {
+          // Calculate XP based on difficulty if userUpdates is not available
+          const difficultyPoints = {
+            'easy': 10,
+            'medium': 20,
+            'hard': 30
+          };
+          const xp = difficultyPoints[challenge.difficulty] || 0;
+          
+          console.warn('Submission successful but stats update failed');
+          toast.success(`Challenge completed! You should have earned ${xp} XP`);
           toast.warning('Failed to update stats. Please refresh the page.');
+          
+          // Still dispatch event to refresh stats
+          window.dispatchEvent(new CustomEvent('challenge-complete'));
         }
       } else {
         toast.error('Challenge failed. Try again!');

@@ -8,33 +8,44 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  useEffect(() => {
-    const fetchUserData = async () => {
-      try {
-        setLoading(true);
-        const response = await fetch('http://localhost:5000/api/users/stats', {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem('token')}`,
-          },
-        });
+  const fetchUserData = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch('http://localhost:5000/api/users/stats', {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('token')}`,
+        },
+      });
 
-        if (!response.ok) {
-          throw new Error('Failed to fetch user stats');
-        }
-
-        const data = await response.json();
-        setUserData(data);
-        setError(null);
-      } catch (error) {
-        console.error('Error fetching user stats:', error);
-        setError('Failed to load dashboard data');
-        toast.error('Error loading dashboard data');
-      } finally {
-        setLoading(false);
+      if (!response.ok) {
+        throw new Error('Failed to fetch user stats');
       }
+
+      const data = await response.json();
+      setUserData(data);
+      setError(null);
+    } catch (error) {
+      console.error('Error fetching user stats:', error);
+      setError('Failed to load dashboard data');
+      toast.error('Error loading dashboard data');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchUserData();
+
+    // Set up event listener for challenge completion
+    const handleChallengeComplete = () => {
+      fetchUserData();
     };
 
-    fetchUserData();
+    window.addEventListener('challenge-complete', handleChallengeComplete);
+
+    return () => {
+      window.removeEventListener('challenge-complete', handleChallengeComplete);
+    };
   }, []);
 
   if (loading) {

@@ -128,9 +128,12 @@ exports.submitSolution = async (req, res) => {
     try {
       // Get challenge difficulty and calculate XP
       const difficulty = challenge.difficulty.toLowerCase();
-      const experiencePoints = 
-        difficulty === 'easy' ? 10 :
-        difficulty === 'medium' ? 20 : 30;
+      const difficultyPoints = {
+        'easy': 10,
+        'medium': 20,
+        'hard': 30
+      };
+      const experiencePoints = difficultyPoints[difficulty] || 0;
 
       console.log('Challenge details:', {
         difficulty,

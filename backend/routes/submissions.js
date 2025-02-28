@@ -5,6 +5,7 @@ const axios = require('axios');
 const { verifyToken } = require('../middleware/authMiddleware');
 const Submission = require('../models/Submission');
 const Challenge = require('../models/Challenge'); // to retrieve test cases
+const { User } = require('../models/User'); // Add User model import
 
 // Load environment variables
 const JUDGE0_URL = process.env.JUDGE0_URL;         // e.g., "https://judge0-ce.p.rapidapi.com/submissions"
@@ -44,6 +45,8 @@ const pollSubmissionResult = async (token) => {
 router.post('/', verifyToken, async (req, res) => {
   try {
     const { challengeId, code, language } = req.body;
+    const userId = req.user.id;
+    
     if (!code || !language) {
       return res.status(400).json({ error: 'Code and language are required' });
     }
@@ -120,19 +123,69 @@ router.post('/', verifyToken, async (req, res) => {
 
     // Create a submission record and store detailed feedback (as JSON)
     const submission = await Submission.create({
-      user: req.user.id,
+      user: userId,
       challenge: challengeId,
       code,
       language: normalizedLanguage,
+      passed: overallPass,
       status: overallPass ? 'success' : 'failed',
       feedback: JSON.stringify(testResults, null, 2)
     });
 
+    // If the submission was successful, update the user's XP
+    let userUpdates = null;
+    if (overallPass) {
+      try {
+        // Get challenge difficulty and calculate XP
+        const difficulty = challenge.difficulty.toLowerCase();
+        const difficultyPoints = {
+          'easy': 10,
+          'medium': 20,
+          'hard': 30
+        };
+        const experiencePoints = difficultyPoints[difficulty] || 0;
+
+        // Find and update user
+        const user = await User.findById(userId);
+        
+        if (user) {
+          // Update user stats
+          const oldXP = user.experiencePoints || 0;
+          const oldLevel = user.level || 1;
+
+          user.experiencePoints = oldXP + experiencePoints;
+          
+          // Update level and badge
+          const updates = user.updateLevelAndBadge();
+          user.level = updates.level;
+          user.currentBadge = updates.currentBadge;
+
+          // Save user changes
+          await user.save();
+
+          userUpdates = {
+            experiencePointsEarned: experiencePoints,
+            oldXP,
+            newTotalXP: user.experiencePoints,
+            oldLevel,
+            newLevel: user.level,
+            newBadge: user.currentBadge
+          };
+        }
+      } catch (error) {
+        console.error('Error updating user XP:', error);
+      }
+    }
+
     return res.json({
       success: true,
-      submission,
+      submission: {
+        id: submission._id,
+        passed: overallPass
+      },
       testResults,
-      overallPass
+      overallPass,
+      userUpdates
     });
   } catch (error) {
     console.error('Judge0 error:', error.response?.data || error.message);
