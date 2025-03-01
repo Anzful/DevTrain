@@ -6,7 +6,7 @@ export default function Home() {
   return (
     <>
       <Head>
-        <title>CodeCraft - AI-Powered E-Learning Platform</title>
+        <title>DevTrain - AI-Powered E-Learning Platform</title>
         <meta name="description" content="Enhance your coding skills with our AI-powered learning platform" />
       </Head>
       

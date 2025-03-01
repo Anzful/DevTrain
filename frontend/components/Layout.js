@@ -58,7 +58,7 @@ export default function Layout({ children }) {
             {/* Logo */}
             <div className="flex items-center">
               <Link href="/dashboard" className="flex items-center py-4 px-2">
-                <span className="font-bold text-white text-xl md:text-2xl">CodeCraft</span>
+                <span className="font-bold text-white text-xl md:text-2xl">DevTrain</span>
               </Link>
             </div>
 
@@ -288,7 +288,7 @@ export default function Layout({ children }) {
 
       <footer className="bg-navy-800 text-navy-200 text-center py-4">
         <p className="text-sm">
-          &copy; {new Date().getFullYear()} CodeCraft. All rights reserved.
+          &copy; {new Date().getFullYear()} DevTrain. All rights reserved.
         </p>
       </footer>
     </div>

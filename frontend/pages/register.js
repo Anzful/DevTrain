@@ -68,8 +68,8 @@ export default function Register() {
   return (
     <>
       <Head>
-        <title>Register - CodeCraft</title>
-        <meta name="description" content="Create your account on CodeCraft and start your coding journey" />
+        <title>Register - DevTrain</title>
+        <meta name="description" content="Create your account on DevTrain and start your coding journey" />
       </Head>
       <div className="min-h-screen bg-gradient-to-br from-navy-900 to-navy-800 flex flex-col justify-center items-center px-4">
         <div className="w-full max-w-md">

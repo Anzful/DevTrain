@@ -56,7 +56,7 @@ export default function Login() {
   return (
     <>
       <Head>
-        <title>Sign In - CodeCraft</title>
+        <title>Sign In - DevTrain</title>
       </Head>
       <div className="min-h-screen bg-gradient-to-br from-navy-900 to-navy-800 flex flex-col justify-center items-center px-4">
         <div className="w-full max-w-md">

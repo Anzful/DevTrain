@@ -141,7 +141,7 @@ export default function ChallengePage() {
   return (
     <Layout>
       <Head>
-        <title>{challenge.title} - CodeCraft Challenge</title>
+        <title>{challenge.title} - DevTrain Challenge</title>
       </Head>
       <div className="min-h-screen bg-gradient-to-b from-navy-900 to-navy-800 py-4 sm:py-6 md:py-8 px-4">
         <div className="max-w-[1600px] mx-auto">
