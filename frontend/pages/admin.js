@@ -352,7 +352,7 @@ export default function AdminDashboard() {
                           {post.content}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-navy-200">
-                          {post.author?.name || 'Anonymous'}
+                          {post.user?.name || 'Anonymous'}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-navy-200">
                           {new Date(post.createdAt).toLocaleDateString()}
