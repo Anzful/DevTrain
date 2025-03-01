@@ -8,38 +8,32 @@ export default function Login() {
   const router = useRouter();
   const [formData, setFormData] = useState({
     email: '',
-    password: ''
+    password: '',
   });
-  const [isLoading, setIsLoading] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const handleChange = (e) => {
     setFormData({
       ...formData,
-      [e.target.name]: e.target.value.trim()
+      [e.target.name]: e.target.value,
     });
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
     if (!formData.email || !formData.password) {
       toast.error('Please fill in all fields');
       return;
     }
 
     try {
-      setIsLoading(true);
-      console.log('Attempting login with:', { email: formData.email });
-      
+      setLoading(true);
       const response = await fetch('http://localhost:5000/api/auth/login', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          email: formData.email.toLowerCase(),
-          password: formData.password
-        })
+        body: JSON.stringify(formData),
       });
 
       const data = await response.json();
@@ -49,15 +43,13 @@ export default function Login() {
       }
 
       localStorage.setItem('token', data.token);
-      localStorage.setItem('userId', data.user.id);
-      
-      toast.success('Login successful!');
+      localStorage.setItem('userId', data.user._id);
+      toast.success('Login successful');
       router.push('/dashboard');
     } catch (error) {
-      console.error('Login error:', error);
-      toast.error(error.message || 'Login failed');
+      toast.error(error.message);
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
   };
 
@@ -66,72 +58,86 @@ export default function Login() {
       <Head>
         <title>Sign In - CodeCraft</title>
       </Head>
-      <div className="min-h-screen flex items-center justify-center bg-navy-900 py-8 sm:py-12 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-md w-full space-y-6 sm:space-y-8">
-          <div className="text-center">
-            <h2 className="mt-4 sm:mt-6 text-2xl sm:text-3xl font-extrabold text-white">
-              Sign in to your account
-            </h2>
-            <p className="mt-2 text-xs sm:text-sm text-gray-300">
-              Or{' '}
-              <Link href="/register" className="font-medium text-blue-400 hover:text-blue-300">
-                create a new account
-              </Link>
-            </p>
+      <div className="min-h-screen bg-gradient-to-br from-navy-900 to-navy-800 flex flex-col justify-center items-center px-4">
+        <div className="w-full max-w-md">
+          {/* Logo/Header */}
+          <div className="text-center mb-8">
+            <h1 className="text-4xl font-bold text-white mb-2">DevTrain</h1>
+            <p className="text-navy-300">Sign in to your account</p>
           </div>
-          <div className="bg-navy-800 p-5 sm:p-8 shadow-lg rounded-lg">
-            <form className="space-y-4 sm:space-y-6" onSubmit={handleSubmit}>
+          
+          {/* Login Card */}
+          <div className="bg-navy-800/60 rounded-xl shadow-xl border border-navy-700/50 p-8">
+            <form onSubmit={handleSubmit} className="space-y-6">
               <div>
-                <label htmlFor="email" className="block text-xs sm:text-sm font-medium text-gray-200">
-                  Email address
+                <label htmlFor="email" className="block text-sm font-medium text-navy-200 mb-2">
+                  Email Address
                 </label>
-                <div className="mt-1">
-                  <input
-                    id="email"
-                    name="email"
-                    type="email"
-                    autoComplete="email"
-                    required
-                    value={formData.email}
-                    onChange={handleChange}
-                    disabled={isLoading}
-                    className="appearance-none block w-full px-3 py-2 border border-navy-700 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 bg-navy-700 text-white text-xs sm:text-sm"
-                    placeholder="Email address"
-                  />
-                </div>
+                <input
+                  id="email"
+                  name="email"
+                  type="email"
+                  autoComplete="email"
+                  required
+                  value={formData.email}
+                  onChange={handleChange}
+                  className="w-full bg-navy-700/80 border border-navy-600 text-white rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  placeholder="Enter your email"
+                />
               </div>
+
               <div>
-                <label htmlFor="password" className="block text-xs sm:text-sm font-medium text-gray-200">
-                  Password
-                </label>
-                <div className="mt-1">
-                  <input
-                    id="password"
-                    name="password"
-                    type="password"
-                    autoComplete="current-password"
-                    required
-                    value={formData.password}
-                    onChange={handleChange}
-                    disabled={isLoading}
-                    className="appearance-none block w-full px-3 py-2 border border-navy-700 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 bg-navy-700 text-white text-xs sm:text-sm"
-                    placeholder="Password"
-                  />
+                <div className="flex items-center justify-between mb-2">
+                  <label htmlFor="password" className="block text-sm font-medium text-navy-200">
+                    Password
+                  </label>
+                  <a href="#" className="text-sm text-blue-400 hover:text-blue-300">
+                    Forgot password?
+                  </a>
                 </div>
+                <input
+                  id="password"
+                  name="password"
+                  type="password"
+                  autoComplete="current-password"
+                  required
+                  value={formData.password}
+                  onChange={handleChange}
+                  className="w-full bg-navy-700/80 border border-navy-600 text-white rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  placeholder="Enter your password"
+                />
               </div>
-              <div className="pt-2">
+
+              <div>
                 <button
                   type="submit"
-                  disabled={isLoading}
-                  className={`group relative w-full flex justify-center py-3 sm:py-2 px-4 border border-transparent rounded-md shadow-sm text-xs sm:text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200 touch-manipulation ${
-                    isLoading ? 'opacity-50 cursor-not-allowed' : ''
+                  disabled={loading}
+                  className={`w-full rounded-lg py-3 px-4 font-medium text-white ${
+                    loading
+                      ? 'bg-blue-700/50 cursor-not-allowed'
+                      : 'bg-blue-600 hover:bg-blue-700 shadow-md hover:shadow-lg transition-all'
                   }`}
-                  style={{ position: 'relative', zIndex: 10 }}
                 >
-                  {isLoading ? 'Signing in...' : 'Sign in'}
+                  {loading ? (
+                    <div className="flex items-center justify-center space-x-2">
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                      <span>Signing in...</span>
+                    </div>
+                  ) : (
+                    'Sign in'
+                  )}
                 </button>
               </div>
             </form>
+
+            <div className="mt-8 pt-6 border-t border-navy-700/50 text-center">
+              <p className="text-navy-300">
+                Don't have an account?{' '}
+                <Link href="/register" className="text-blue-400 hover:text-blue-300 font-medium">
+                  Sign up
+                </Link>
+              </p>
+            </div>
           </div>
         </div>
       </div>
