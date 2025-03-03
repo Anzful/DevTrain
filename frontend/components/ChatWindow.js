@@ -3,6 +3,8 @@ import io from 'socket.io-client';
 import { toast } from 'react-hot-toast';
 import { XMarkIcon, PaperAirplaneIcon, ChatBubbleLeftRightIcon } from '@heroicons/react/24/outline';
 
+const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5000'; // Fallback for local dev
+
 const ChatWindow = ({ user, onClose }) => {
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
@@ -18,7 +20,7 @@ const ChatWindow = ({ user, onClose }) => {
         const token = localStorage.getItem('token');
         console.log('Loading messages for user:', user._id);
         
-        const response = await fetch(`http://localhost:5000/api/chat/messages/${user._id}`, {
+        const response = await fetch(`${BACKEND_URL}/api/chat/messages/${user._id}`, {
           headers: {
             'Authorization': `Bearer ${token}`
           }
@@ -46,13 +48,13 @@ const ChatWindow = ({ user, onClose }) => {
   // Socket connection
   useEffect(() => {
     const token = localStorage.getItem('token');
-    const newSocket = io('http://localhost:5000', {
+    const newSocket = io(BACKEND_URL, {
       auth: { token },
       query: { userId: currentUserId }
     });
 
     newSocket.on('connect', () => {
-      console.log('Connected to chat server');
+      console.log('Connected to chat server at:', BACKEND_URL);
     });
 
     newSocket.on('message', (message) => {
@@ -71,7 +73,7 @@ const ChatWindow = ({ user, onClose }) => {
     });
 
     newSocket.on('error', (error) => {
-      toast.error(error.message);
+      toast.error(error.message || 'Socket error occurred');
     });
 
     setSocket(newSocket);
@@ -147,7 +149,7 @@ const ChatWindow = ({ user, onClose }) => {
         content: newMessage.trim()
       };
 
-      const response = await fetch('http://localhost:5000/api/chat/messages', {
+      const response = await fetch(`${BACKEND_URL}/api/chat/messages`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -279,4 +281,4 @@ const ChatWindow = ({ user, onClose }) => {
   );
 };
 
-export default ChatWindow; 
+export default ChatWindow;

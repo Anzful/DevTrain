@@ -3,6 +3,8 @@ import { useRouter } from 'next/router';
 import Layout from '../../../components/Layout';
 import { toast } from 'react-hot-toast';
 
+const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5000'; // Fallback for local dev
+
 export default function EditChallenge() {
   const router = useRouter();
   const { id } = router.query;
@@ -31,7 +33,7 @@ export default function EditChallenge() {
   const fetchCategories = async () => {
     try {
       console.log('Fetching categories...');
-      const response = await fetch('http://localhost:5000/api/challenges/categories');
+      const response = await fetch(`${BACKEND_URL}/api/challenges/categories`);
       if (response.ok) {
         const data = await response.json();
         console.log('Categories fetched:', data);
@@ -47,7 +49,7 @@ export default function EditChallenge() {
   const fetchChallenge = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`http://localhost:5000/api/challenges/${id}`, {
+      const response = await fetch(`${BACKEND_URL}/api/challenges/${id}`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -77,7 +79,7 @@ export default function EditChallenge() {
         language: challenge.language || 'python' // Use existing language or default to python
       };
       
-      const response = await fetch(`http://localhost:5000/api/challenges/${id}`, {
+      const response = await fetch(`${BACKEND_URL}/api/challenges/${id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -96,6 +98,8 @@ export default function EditChallenge() {
     } catch (error) {
       console.error('Error updating challenge:', error);
       toast.error(error.message || 'Failed to update challenge');
+    } finally {
+      setSubmitting(false); // Reset submitting state regardless of success or failure
     }
   };
 
@@ -272,14 +276,16 @@ export default function EditChallenge() {
                 type="button"
                 onClick={() => router.back()}
                 className="px-4 py-2 bg-navy-700 text-white rounded-lg hover:bg-navy-600 transition-colors"
+                disabled={submitting}
               >
                 Cancel
               </button>
               <button
                 type="submit"
                 className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                disabled={submitting}
               >
-                Update Challenge
+                {submitting ? 'Updating...' : 'Update Challenge'}
               </button>
             </div>
           </form>
@@ -287,4 +293,4 @@ export default function EditChallenge() {
       </div>
     </Layout>
   );
-} 
+}

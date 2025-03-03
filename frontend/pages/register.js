@@ -1,4 +1,3 @@
-// frontend/pages/register.js
 import { useState } from 'react';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
@@ -39,7 +38,8 @@ export default function Register() {
       setLoading(true);
       console.log('Sending registration data:', formData);
       
-      const response = await fetch('http://localhost:5000/api/auth/register', {
+      const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5000'; // Fallback for local dev
+      const response = await fetch(`${BACKEND_URL}/api/auth/register`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -65,6 +65,7 @@ export default function Register() {
     }
   };
 
+  // Rest of your code remains unchanged...
   return (
     <>
       <Head>

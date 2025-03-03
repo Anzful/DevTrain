@@ -1,9 +1,10 @@
-// frontend/pages/challenges/index.js
 import useSWR from 'swr';
 import Link from 'next/link';
 import Layout from '../../components/Layout';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
+
+const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5000'; // Fallback for local dev
 
 const fetcher = (url) =>
   fetch(url, {
@@ -18,7 +19,7 @@ export default function Challenges() {
   
   // Fetch challenges with filters
   const { data: challenges, error, mutate } = useSWR(
-    `http://localhost:5000/api/challenges?difficulty=${difficultyFilter}&category=${categoryFilter}`, 
+    `${BACKEND_URL}/api/challenges?difficulty=${difficultyFilter}&category=${categoryFilter}`, 
     fetcher
   );
   
@@ -26,7 +27,7 @@ export default function Challenges() {
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        const response = await fetch('http://localhost:5000/api/challenges/categories');
+        const response = await fetch(`${BACKEND_URL}/api/challenges/categories`);
         if (response.ok) {
           const data = await response.json();
           setCategories(data);

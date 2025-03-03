@@ -1,4 +1,3 @@
-// frontend/pages/leaderboards.js
 import { useState, useEffect } from 'react';
 import Layout from '../components/Layout';
 import { toast } from 'react-hot-toast';
@@ -21,7 +20,8 @@ export default function Leaderboards() {
   const fetchLeaderboards = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:5000/api/leaderboards', {
+      const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5000'; // Fallback for local dev
+      const response = await fetch(`${BACKEND_URL}/api/leaderboards`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }

@@ -1,4 +1,3 @@
-// frontend/pages/challenges/[id].js
 import { useRouter } from 'next/router';
 import useSWR from 'swr';
 import Layout from '../../components/Layout';
@@ -7,6 +6,9 @@ import dynamic from 'next/dynamic';
 import { toast } from 'react-hot-toast';
 import ChallengeSubmission from '../../components/ChallengeSubmission';
 import Head from 'next/head';
+
+// Define BACKEND_URL globally
+const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5000'; // Fallback for local dev
 
 // Dynamically import CodeEditor so it loads only on the client side
 const CodeEditor = dynamic(() => import('../../components/CodeEditor'), {
@@ -34,7 +36,7 @@ export default function ChallengePage() {
 
   useEffect(() => {
     if (id) {
-      fetch(`http://localhost:5000/api/challenges/${id}`, {
+      fetch(`${BACKEND_URL}/api/challenges/${id}`, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem('token')}`,
         },
@@ -65,7 +67,7 @@ export default function ChallengePage() {
         isOfficialSubmission: false // Flag to indicate this is just a test run
       });
 
-      const response = await fetch('http://localhost:5000/api/submissions', {
+      const response = await fetch(`${BACKEND_URL}/api/submissions`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

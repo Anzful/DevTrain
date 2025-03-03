@@ -3,6 +3,8 @@ import { useRouter } from 'next/router';
 import Layout from '../../components/Layout';
 import { toast } from 'react-hot-toast';
 
+const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5000'; // Fallback for local dev
+
 export default function NewChallenge() {
   const router = useRouter();
   const [submitting, setSubmitting] = useState(false);
@@ -24,7 +26,7 @@ export default function NewChallenge() {
     const fetchCategories = async () => {
       try {
         console.log('Fetching categories for new challenge...');
-        const response = await fetch('http://localhost:5000/api/challenges/categories');
+        const response = await fetch(`${BACKEND_URL}/api/challenges/categories`);
         if (response.ok) {
           const data = await response.json();
           console.log('Categories fetched:', data);
@@ -51,7 +53,7 @@ export default function NewChallenge() {
         language: 'python' // Default language
       };
       
-      const response = await fetch('http://localhost:5000/api/challenges', {
+      const response = await fetch(`${BACKEND_URL}/api/challenges`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -255,4 +257,4 @@ export default function NewChallenge() {
       </div>
     </Layout>
   );
-} 
+}

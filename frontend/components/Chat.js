@@ -1,18 +1,21 @@
-// frontend/components/Chat.js
 import { useEffect, useState, useRef } from 'react';
 import io from 'socket.io-client';
 
-export default function Chat() {
+const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5000'; // Fallback for local dev
+
+export default function Chat({ recipientId }) { // Added recipientId as a prop
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
   const messagesEndRef = useRef(null);
-  const socketRef = useRef(null); // use ref to store the socket instance
+  const socketRef = useRef(null); // Use ref to store the socket instance
 
   useEffect(() => {
-    // Initialize socket connection and store in ref
-    const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5000';
-    socketRef.current = io(backendUrl);
-    console.log('Socket connected to:', backendUrl);
+    // Initialize socket connection with token authentication
+    const token = localStorage.getItem('token');
+    socketRef.current = io(BACKEND_URL, {
+      auth: { token }, // Pass token for authentication
+    });
+    console.log('Socket connected to:', BACKEND_URL);
 
     // Register the current user
     const currentUserId = localStorage.getItem('userId');
@@ -25,14 +28,19 @@ export default function Chat() {
 
     // Listen for incoming direct messages
     socketRef.current.on('direct message', (data) => {
-      console.log("New direct message received:", data);
+      console.log('New direct message received:', data);
       setMessages((prevMessages) => [...prevMessages, data]);
     });
 
-    // Optionally, listen for broadcast messages
+    // Optionally, listen for broadcast messages (if your backend supports this)
     socketRef.current.on('chat message', (msg) => {
-      console.log("New broadcast message received:", msg);
+      console.log('New broadcast message received:', msg);
       setMessages((prevMessages) => [...prevMessages, msg]);
+    });
+
+    // Handle connection errors
+    socketRef.current.on('connect_error', (error) => {
+      console.error('Socket connection error:', error);
     });
 
     // Cleanup on unmount
@@ -50,16 +58,16 @@ export default function Chat() {
   }, [messages]);
 
   const sendMessage = () => {
-    if (input.trim() !== '') {
+    if (input.trim() !== '' && recipientId) {
       const currentUserId = localStorage.getItem('userId');
-      // For direct messaging, you'll need to include the recipient's id.
-      // Replace "TARGET_USER_ID" with the actual recipient's id.
-      const messageData = { from: currentUserId, to: "TARGET_USER_ID", message: input };
+      const messageData = { from: currentUserId, to: recipientId, message: input };
 
-      // Use the stored socket instance to emit the message.
+      // Use the stored socket instance to emit the message
       socketRef.current.emit('direct message', messageData);
       setMessages((prev) => [...prev, messageData]);
       setInput('');
+    } else if (!recipientId) {
+      console.warn('No recipientId provided for direct message');
     }
   };
 
@@ -76,7 +84,9 @@ export default function Chat() {
       <div className="h-40 overflow-y-scroll border-b mb-2 p-2">
         {messages.length > 0 ? (
           messages.map((msg, index) => (
-            <p key={index} className="mb-1">{msg.message || msg}</p>
+            <p key={index} className="mb-1">
+              {msg.from === localStorage.getItem('userId') ? 'You' : 'Them'}: {msg.message || msg}
+            </p>
           ))
         ) : (
           <p>No messages yet.</p>

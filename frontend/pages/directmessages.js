@@ -25,7 +25,8 @@ export default function DirectMessages() {
 
     const fetchUsers = async () => {
       try {
-        const response = await fetch('http://localhost:5000/api/users', {
+        const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5000'; // Fallback for local dev
+        const response = await fetch(`${BACKEND_URL}/api/users`, {
           headers: {
             'Authorization': `Bearer ${token}`
           }

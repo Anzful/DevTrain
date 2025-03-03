@@ -5,6 +5,8 @@ import PostDetail from '../../components/PostDetail';
 import Link from 'next/link';
 import { ArrowLeftIcon } from '@heroicons/react/24/solid';
 
+const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5000'; // Fallback for local dev
+
 const fetcher = (url) =>
   fetch(url, {
     headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
@@ -15,7 +17,7 @@ export default function ForumPost() {
   const { id } = router.query;
 
   const { data, error, mutate } = useSWR(
-    id ? `http://localhost:5000/api/forum/${id}` : null,
+    id ? `${BACKEND_URL}/api/forum/${id}` : null,
     fetcher
   );
 
@@ -55,4 +57,4 @@ export default function ForumPost() {
       </div>
     </Layout>
   );
-} 
+}

@@ -1,5 +1,6 @@
-// frontend/components/Leaderboard.js
 import { useState, useEffect } from 'react';
+
+const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5000';
 
 const Leaderboard = () => {
   const [leaderboardData, setLeaderboardData] = useState([]);
@@ -15,9 +16,9 @@ const Leaderboard = () => {
           throw new Error('No token found');
         }
 
-        const response = await fetch(`http://localhost:5000/api/leaderboards?timeframe=${timeframe}`, {
+        const response = await fetch(${BACKEND_URL}/api/leaderboards?timeframe=${timeframe}, {
           headers: {
-            Authorization: `Bearer ${token}`
+            Authorization: Bearer ${token}
           }
         });
 
@@ -78,7 +79,7 @@ const Leaderboard = () => {
               <div className="flex items-center">
                 <span className="font-medium w-8">{index + 1}.</span>
                 <div className="flex items-center">
-                  <span className="text-2xl mr-2">{user.currentBadge?.image || '🔰'}</span>
+                  <span className="text-2xl mr-2">{user.currentBadge?.image || ':beginner:'}</span>
                   <div>
                     <span className="font-medium">{user.name}</span>
                     <div className="text-sm text-gray-500">

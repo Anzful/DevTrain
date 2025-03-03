@@ -3,6 +3,8 @@ import { useRouter } from 'next/router';
 import Link from 'next/link';
 import { toast } from 'react-hot-toast';
 
+const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5000'; // Fallback for local dev
+
 export default function Layout({ children }) {
   const router = useRouter();
   const [user, setUser] = useState(null);
@@ -17,7 +19,7 @@ export default function Layout({ children }) {
           setLoading(false);
           return;
         }
-        const response = await fetch('http://localhost:5000/api/users/stats', {
+        const response = await fetch(`${BACKEND_URL}/api/users/stats`, {
           headers: { 'Authorization': `Bearer ${token}` },
         });
         if (!response.ok) throw new Error('Failed to fetch user data');
@@ -288,7 +290,7 @@ export default function Layout({ children }) {
 
       <footer className="bg-navy-800 text-navy-200 text-center py-4">
         <p className="text-sm">
-          &copy; {new Date().getFullYear()} DevTrain. All rights reserved.
+          © {new Date().getFullYear()} DevTrain. All rights reserved.
         </p>
       </footer>
     </div>

@@ -3,6 +3,8 @@ import Layout from '../components/Layout';
 import { toast } from 'react-hot-toast';
 import { useRouter } from 'next/router';
 
+const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5000'; // Fallback for local dev
+
 export default function AdminDashboard() {
   const router = useRouter();
   const [users, setUsers] = useState([]);
@@ -21,7 +23,7 @@ export default function AdminDashboard() {
           return;
         }
 
-        const response = await fetch('http://localhost:5000/api/users/stats', {
+        const response = await fetch(`${BACKEND_URL}/api/users/stats`, {
           headers: {
             'Authorization': `Bearer ${token}`
           }
@@ -52,19 +54,19 @@ export default function AdminDashboard() {
       const token = localStorage.getItem('token');
       
       // Fetch users, challenges, and forum posts
-      const usersResponse = await fetch('http://localhost:5000/api/users', {
+      const usersResponse = await fetch(`${BACKEND_URL}/api/users`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
       });
       
-      const challengesResponse = await fetch('http://localhost:5000/api/challenges', {
+      const challengesResponse = await fetch(`${BACKEND_URL}/api/challenges`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
       });
 
-      const forumResponse = await fetch('http://localhost:5000/api/forum', {
+      const forumResponse = await fetch(`${BACKEND_URL}/api/forum`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -96,7 +98,7 @@ export default function AdminDashboard() {
       console.log('Attempting to delete post:', postId);
       const token = localStorage.getItem('token');
       
-      const response = await fetch(`http://localhost:5000/api/forum/${postId}`, {
+      const response = await fetch(`${BACKEND_URL}/api/forum/${postId}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -136,7 +138,7 @@ export default function AdminDashboard() {
       const token = localStorage.getItem('token');
       console.log('Deleting challenge:', challengeId);
       
-      const response = await fetch(`http://localhost:5000/api/challenges/${challengeId}`, {
+      const response = await fetch(`${BACKEND_URL}/api/challenges/${challengeId}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -376,4 +378,4 @@ export default function AdminDashboard() {
       </div>
     </Layout>
   );
-} 
+}

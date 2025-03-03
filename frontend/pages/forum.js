@@ -1,10 +1,11 @@
-// frontend/pages/forum.js
 import useSWR from 'swr';
 import Layout from '../components/Layout';
 import { useState } from 'react';
 import { toast } from 'react-hot-toast';
 import Link from 'next/link';
 import { HandThumbUpIcon, HandThumbDownIcon, ChatBubbleLeftIcon, PlusIcon } from '@heroicons/react/24/solid';
+
+const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5000'; // Fallback for local dev
 
 const fetcher = (url) =>
   fetch(url, {
@@ -17,7 +18,7 @@ export default function Forum() {
   const [submitting, setSubmitting] = useState(false);
   const [showCreateForm, setShowCreateForm] = useState(false);
 
-  const { data, error, mutate } = useSWR('http://localhost:5000/api/forum', fetcher);
+  const { data, error, mutate } = useSWR(`${BACKEND_URL}/api/forum`, fetcher);
 
   // Helper function to check if user has voted
   const hasUserVoted = (votesArray, userId) => {
@@ -33,7 +34,7 @@ export default function Forum() {
 
     try {
       setSubmitting(true);
-      const response = await fetch('http://localhost:5000/api/forum', {
+      const response = await fetch(`${BACKEND_URL}/api/forum`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -66,7 +67,7 @@ export default function Forum() {
         return;
       }
 
-      const response = await fetch(`http://localhost:5000/api/forum/${id}/${type}`, {
+      const response = await fetch(`${BACKEND_URL}/api/forum/${id}/${type}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

@@ -1,4 +1,3 @@
-// frontend/pages/dashboard.js
 import { useState, useEffect } from 'react';
 import Layout from '../components/Layout';
 import { toast } from 'react-hot-toast';
@@ -16,7 +15,8 @@ export default function Dashboard() {
   const fetchUserData = async () => {
     try {
       setLoading(true);
-      const response = await fetch('http://localhost:5000/api/users/stats', {
+      const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5000'; // Fallback for local dev
+      const response = await fetch(`${BACKEND_URL}/api/users/stats`, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem('token')}`,
         },

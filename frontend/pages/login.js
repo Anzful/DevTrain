@@ -28,7 +28,8 @@ export default function Login() {
 
     try {
       setLoading(true);
-      const response = await fetch('http://localhost:5000/api/auth/login', {
+      const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5000'; // Fallback for local dev
+      const response = await fetch(`${BACKEND_URL}/api/auth/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

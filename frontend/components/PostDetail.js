@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { toast } from 'react-hot-toast';
 import { HandThumbUpIcon, HandThumbDownIcon, ArrowUturnLeftIcon, PaperAirplaneIcon } from '@heroicons/react/24/solid';
 
+const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5000';
+
 export default function PostDetail({ post, mutate }) {
   const [comment, setComment] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -17,21 +19,21 @@ export default function PostDetail({ post, mutate }) {
 
       let url;
       if (isComment) {
-        url = `http://localhost:5000/api/forum/${id}/comment/${commentId}/${type}`;
+        url = ${BACKEND_URL}/api/forum/${id}/comment/${commentId}/${type};
       } else {
-        url = `http://localhost:5000/api/forum/${id}/${type}`;
+        url = ${BACKEND_URL}/api/forum/${id}/${type};
       }
 
       const response = await fetch(url, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${localStorage.getItem('token')}`,
+          Authorization: Bearer ${localStorage.getItem('token')},
         },
       });
 
       if (!response.ok) {
-        throw new Error(`Failed to ${type}`);
+        throw new Error(Failed to ${type});
       }
 
       mutate();
@@ -49,11 +51,11 @@ export default function PostDetail({ post, mutate }) {
 
     try {
       setSubmitting(true);
-      const response = await fetch(`http://localhost:5000/api/forum/${post._id}/comment`, {
+      const response = await fetch(${BACKEND_URL}/api/forum/${post._id}/comment, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${localStorage.getItem('token')}`,
+          Authorization: Bearer ${localStorage.getItem('token')},
         },
         body: JSON.stringify({ comment }),
       });
@@ -258,4 +260,4 @@ export default function PostDetail({ post, mutate }) {
       )}
     </div>
   );
-} 
+}

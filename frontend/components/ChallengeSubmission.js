@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { toast } from 'react-hot-toast';
 
+const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5000'; // Fallback for local dev
+
 const ChallengeSubmission = ({ challenge, code, onSuccess }) => {
   const [submitting, setSubmitting] = useState(false);
 
@@ -14,7 +16,7 @@ const ChallengeSubmission = ({ challenge, code, onSuccess }) => {
         isOfficialSubmission: true
       });
       
-      const response = await fetch('http://localhost:5000/api/submissions', {
+      const response = await fetch(`${BACKEND_URL}/api/submissions`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -117,4 +119,4 @@ const ChallengeSubmission = ({ challenge, code, onSuccess }) => {
   );
 };
 
-export default ChallengeSubmission; 
+export default ChallengeSubmission;
